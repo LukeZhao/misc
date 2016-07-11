@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+VE="/var/virtumedix/bin"
+APP_DIR="/usr/local/virtumedix"
+HOST="0.0.0.0"
+PORT="5000"
+WORKERS=4
+LOGFILE="/var/log/gunicorn_raw.log"
+LOGLEVEL="debug"
+PIDFILE="/var/run/gunicorn.pid"
+KEYS="/etc/nginx/ssl"
+
+# Running in container?
+if [ -f /etc/hosts.tmpl ]
+then
+    service syslog-ng start
+    cp -u /etc/hosts /etc/hosts.orig
+    /consul-template -once -consul=consul:8500 \
+        -template=/etc/hosts.tmpl:/etc/hosts.new
+    cp -u /etc/hosts.new /etc/hosts
+fi
+
+exec $VE/gunicorn --worker-class sync \
+    --user nobody --group nobody --chdir $APP_DIR \
+    --workers $WORKERS --bind $HOST:$PORT --enable-stdio-inheritance \
+    --pid=$PIDFILE --log-file=$LOGFILE --log-level=$LOGLEVEL \
+    --certfile=$KEYS/test.crt --keyfile=$KEYS/test.key \
+    --preload testapp:app
