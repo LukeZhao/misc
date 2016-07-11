@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <title>Twilio Video Test</title>
+    <link rel="stylesheet" href="https://media.twiliocdn.com/sdk/quickstart/conversations-quickstart.min.css">
+  </head>
+  <body>
+  <div id="remote-media"></div>
+  <div id="controls">
+    <div id="preview">
+      <p class="instructions">Lookin' good!</p>
+      <div id="local-media"></div>
+      <button id="button-preview">Preview My Camera</button>
+    </div>
+    <div id="invite-controls">
+      <p class="instructions">Invite another Client</p>
+      <input id="invite-to" type="text" placeholder="Identity to invite" />
+      <button id="button-invite">Send Invite</button>
+    </div>
+    <div id="token">
+      <p class="instructions">Paste token here:</P>
+      <input id="twilio_video_token" type="text" placeholder="Token to paste here" />
+      <button id="button-start">Start video</button>
+    </div>
+    <div>
+      <p class="instructions">Open this page on two chrome browsers. From one of it click the 'get tokens' button 
+to get twilio video tokens. Two tokens 
+will be generated in addition to two ids. copy the clinician token to one browser, and the patient token to the other (where it says 'Token to paste here'), and click 'Start
+video' button (make sure you have webcam connected) for both. Then paste the patient id to the session where the clinician
+token is used, and then click 'invite' button, this will invite the patient to join the video session. If everythign goes well, a video conversation should be started.</P>
+      <p class="instructions">get tokens here:</P>
+      <textarea id="idTokens" rows="20" cols="150"></textarea></br>
+      <button id="button-get-tokens">get tokens</button>
+    </div>
+    <div id="log">
+      <p>&gt;&nbsp;<span id="log-content">Preparing to listen</span>...</p>
+    </div>
+  </div><!-- /controls -->
+  <script src="https://media.twiliocdn.com/sdk/js/common/v0.1/twilio-common.min.js"></script>
+  <script src="https://media.twiliocdn.com/sdk/js/conversations/v0.13/twilio-conversations.min.js"></script>
+  <script src="quickstart.js"></script>
+  </body>
+</html>
