@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+import shutil
+import sys
+import os
+import time
+from uuid import uuid4
+source = None
+destination = None
+try:
+    ttl = sys.argv[1]
+    if not ttl:
+        raise Exception('no ttl specified')
+    int(ttl)
+    os.system('sdown')
+    afile=os.path.realpath('/etc/virtumedix/settings.py')
+    bfile = afile + str(uuid4())
+    print afile
+    destination = open(bfile, 'w')
+    source = open(afile, 'r')
+    tok = '    JWT_EXPIRATION_DELTA = timedelta(seconds='
+    lines = source.readlines()
+    for i in range(len(lines)):
+        if lines[i].startswith(tok):
+            print lines[i]
+            lines[i] = tok + ttl + ')\n'
+            print lines[i]
+            break
+    destination.writelines(lines)
+    destination.close()
+    destination = None
+    source.close()
+    source = None
+    while os.path.exists(afile):
+        try:
+            os.remove(afile)
+        except Exception:
+            print('Exception trying to remvoe file')
+            time.sleep(1)
+    print afile + ' removed'
+    shutil.copy(bfile, afile)
+    if os.path.exists(afile):
+        print (afile + ' changed')
+    os.system('sup')
+except Exception as ee:
+    os.system('sup')
+    print (ee)
+if source:
+    source.close()
+if destination:
+    destination.close()
+
