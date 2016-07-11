@@ -1,7 +1,9 @@
 import sys
-from os import path
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import IPython
+from os import path, getcwd
+#sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+sys.path.append(getcwd())
+#import IPython
+import arrow
 from connections import redis_connection, switch_customer
 from main import exit
 rds = redis_connection
