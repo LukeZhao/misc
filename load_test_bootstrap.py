@@ -1,15 +1,21 @@
 import sys
+import flask
 from os import path, getcwd
 #sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 sys.path.append(getcwd())
 #import IPython
 import arrow
-from connections import redis_connection, switch_customer
-from main import exit
+from connections import redis_connection, switch_customer, local
+from main import exit, create_app
 rds = redis_connection
 from sockets import decode_token
 from models import Account, Admin
 import traceback
+
+app = create_app(schedule_events=False)
+app.app_context().push()
+client = app.test_client()
+config = active_config(
 
 if __name__ == '__main__':
     customer = sys.argv[1] if len(sys.argv) > 1 else 'weppa'
