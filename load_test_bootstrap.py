@@ -9,6 +9,7 @@ from main import exit
 rds = redis_connection
 from sockets import decode_token
 from models import Account, Admin
+import traceback
 
 if __name__ == '__main__':
     customer = sys.argv[1] if len(sys.argv) > 1 else 'weppa'
@@ -42,5 +43,6 @@ if __name__ == '__main__':
             admin.role = 'admin_callrep'
             admin.save()
     except Exception as e:
+        traceback.print_exc(file=sys.stdout)
         print e.message
     exit()
