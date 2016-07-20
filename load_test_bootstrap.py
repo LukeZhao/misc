@@ -25,6 +25,21 @@ if __name__ == '__main__':
 
     print '>> creating admin account....'
     try:
+        admin = Admin.objects(email='admin@ad.min').first()
+        if not admin:
+            admin = Admin()
+            admin.enabled = True
+            admin.first_name = 'Luke'
+            admin.last_name = 'Zhao'
+            admin.last_name_norm = 'Zhao'
+            admin.locale = 'en-us'
+            admin.password = Account.generate_password('AdmiN')
+            admin.email = 'admin@ad.min'
+            admin.role = 'system'
+            admin.save()
+        else:
+            admin.password = Account.generate_password('AdmiN')
+            admin.save()
         admin = Admin.objects(email='luke_doc_admin@google.com').first()
         if not admin:
             admin = Admin()
