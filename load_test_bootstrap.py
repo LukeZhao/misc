@@ -11,18 +11,19 @@ rds = redis_connection
 from sockets import decode_token
 from models import Account, Admin
 import traceback
+from settings import active_config, live_config
 
 app = create_app(schedule_events=False)
 app.app_context().push()
 client = app.test_client()
-config = active_config(
+config = active_config()
 
 if __name__ == '__main__':
     customer = sys.argv[1] if len(sys.argv) > 1 else 'weppa'
     print '-'*20, '\nCUSTOMER: {}\n'.format(customer), '-'*20
     switch_customer(customer) or exit()
 
-    print '>> creating admin accound....'
+    print '>> creating admin account....'
     try:
         admin = Admin.objects(email='luke_doc_admin@google.com').first()
         if not admin:
