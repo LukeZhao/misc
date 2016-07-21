@@ -13,7 +13,7 @@ from uuid import uuid4
 from twilio.access_token import AccessToken, ConversationsGrant
 from settings import live_config
 
-def new_tokens():
+def new_twilio_video_tokens():
 
     # get credentials from config
     account_sid = live_config('TWILIO_ACCOUNT_SID')
