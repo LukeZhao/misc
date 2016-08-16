@@ -16,4 +16,4 @@ for con in Consultation.objects(state='pre_queue'):
     print '{}\t{}\t{}'.format(con.patient.first_name,
                               con.patient.last_name,
                               con.patient.email)
-
+sys.stdout.flush()
