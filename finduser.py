@@ -16,7 +16,6 @@ email_list = ('sam.sager@relymd.com',
               'maggie.wu@comtechtel.com',
               'zlata.koro@comtechtel.com',
               'Bruce.Rethwisch@comtechtel.com')
-test_email = ('qingbo_zhao@hotmail.com',)
 app = create_app(schedule_events=False)
 app.app_context().push()
 
@@ -29,7 +28,7 @@ def main():
                                   con.patient.last_name,
                                   con.patient.email,
                                   con.created)
-    for email in test_email: #email_list:
+    for email in email_list:
         try:
             aws_ses.send_message(email, subject, body)
         except:
