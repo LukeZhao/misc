@@ -538,6 +538,182 @@ paths:
         '400':
           description: Validation error
 
+  '/v4/schedule/timeoffs/{uid}'
+    post:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Create a time off block
+      description: |
+        Create a timeoff entry for a clinician.
+
+        Sample json:
+
+            {
+                "start": "1473431400",
+                "end": "1473438600",
+                "info": "going to a wedding"
+            }
+      operationId: timeoffsPOST
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to create schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/schedule/timeoff/{timeoff_id}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get a timeoff
+      description: Get the timeoff instance
+      operationId: timeoffGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: timeoff_id
+          in: path
+          description: ID of the timeoff
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update timeoff
+      description: |
+        Update the timeoff for a clinician
+
+        Sample json (this is similar to business hours):
+
+            {
+                "start": "1473431400",
+                "end": "1473438600",
+                "info": "going to a wedding"
+            }
+      operationId: timeoffPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: timeoff_id
+          in: path
+          description: ID of the timeoff
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to update default schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+    delete:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Delete a timeoff
+      description: Delete a timeoff entry for a clinician
+      operationId: timeoffDELETE
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: timeoff_id
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: timeoff deleted
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/schedules/calendar/{uid}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get all calendar items for a clinician/patient
+      description: |
+        Get the schedule for a clinician or patient.
+      operationId: calendarItemsGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician or patient
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
   '/v4/schedules/{uid}':
     get:
       tags:
