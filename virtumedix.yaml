@@ -1,0 +1,1764 @@
+swagger: '2.0'
+
+
+info:
+  description: VirtuMedix v3 REST APIs
+  version: '3'
+  title: VirtuMedix v3 REST APIs
+  contact: {}
+
+host: api-virtumedix-vm2.nimaws.com
+
+
+basePath: /
+
+
+tags:
+  - name: Protected
+    description: API calls requiring token authentication.
+  - name: Public
+    description: API calls not requiring token authentication.
+  - name: AdminFunctions
+    description: Admin operations
+  - name: Clinicians
+    description: Operations on clinician accounts
+  - name: General
+    description: General operations
+  - name: Patients
+    description: Operations on patient accounts
+  - name: Scheduler
+    description: Operations on for scheduler
+
+schemes:
+  - https
+
+
+######
+paths:
+
+  '/v3/patients':
+
+    post:
+      tags:
+        - Protected
+        - Patients
+      summary: Add a new patient
+      description: |
+        Add a new patient.  Required fields are: first_name, last_name, and email.
+      operationId: postPatients
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/PatientsPOST'
+      responses:
+        '201':
+          description: Success
+          schema:
+            type: object
+            properties:
+              account_id:
+                type: string
+                example: '54fe081b02b9d757d898ff05'
+                description: User ID of newly created patient
+              url:
+                type: string
+                example: '/v3/patients/54fe081b02b9d757d898ff05'
+                description: Endpoint for accessing this account
+              message:
+                type: string
+                example: 'Patient created'
+                description: Informational message
+        '400':
+          description: Validation error
+        '409':
+          description: Conflict (email already exists)
+        '429':
+          description: Too many requests exceeding limit
+
+    get:
+      tags:
+        - Protected
+        - Patients
+      summary: Get list of patients
+      description: Get a list of patients
+      operationId: getPatients
+      produces:
+        - application/json
+      parameters:
+        - name: count
+          in: query
+          description: |
+            The maximum number of results to return (default is 20).  Example:
+            'count=10'.
+          required: false
+          type: string
+        - name: page_number
+          in: query
+          description: |
+            Request the results from a specific page.  Along with the count
+            parameter, this is used to support pagination through multiple
+            result sets.  Example: 'page_number=1'.
+          required: false
+          type: string
+        - name: fields
+          in: query
+          description: |
+            List of comma-separated fields to return.  A plus (ascending)
+            or minus (descending) sign can be prefixed to each field to
+            indicate the desired sorting order, although applying the prefix
+            to multiple fields can lead to an undefined sorting behavior.
+            Example: 'fields=account_id,-first_name'.
+          required: false
+          type: string
+        - name: search
+          in: query
+          description: |
+            Return results matching the search term: case-insensitive partial
+            match against the first_name field, or case-insensitive partial
+            match against the email field, or exact match against the
+            phone field (combining country_code and number into a single
+            value).  Example: 'search=kirk'.
+          required: false
+          type: string
+        - name: master_id
+          in: query
+          description: |
+            THIS IS AN EXAMPLE OF A FIELD MATCHING VALUE SEARCH CRITERIA.
+            Search for results with field matching a specific value.  For
+            example, 'master_id=null' will search for non-dependent patient
+            accounts.  Other field can be specified instead of master_id, e.g.
+            'group__name=tcs' will search for all patients with 'tcs' group
+            value.  Multiple field matching parameters are supported, e.g.
+            'first_name=james&last_name=kirk'.
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PatientsGET'
+          headers:
+            'content-type':
+              description: Content type
+              type: string
+            'x-page':
+              description: Page number
+              type: integer
+            'x-total-count':
+              description: Total number of results for all pages
+              type: integer
+            'x-per-page':
+              description: Number of results per page
+              type: integer
+            'x-ratelimit-limit':
+              description: Number of allowed requests in the current period
+              type: integer
+            'x-ratelimit-remaining':
+              description: Number of remaining requests in the current period
+              type: integer
+            'x-ratelimit-reset':
+              description: UTC timestamp representing when limit will reset
+              type: integer
+        '403':
+          description: Access forbidden
+        '429':
+          description: Too many requests exceeding limit
+
+
+  '/v3/patients/{account_id}':
+
+    get:
+      tags:
+        - Protected
+        - Patients
+      summary: Find patient
+      description: Retrieve an existing patient
+      operationId: getPatient
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: account_id
+          in: path
+          description: ID of existing patient
+          required: true
+          type: string
+        - name: access_reason
+          in: query
+          description: |
+            The access reason is required in certain cases.  For example,
+            when the admin accesses the patient profile, he must specify
+            the reason for the access since that is not considered a normal
+            usage of the system.
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/PatientGET'
+        '403':
+          description: Access forbidden
+        '404':
+          description: Not Found
+        '429':
+          description: Too many requests exceeding limit
+
+    put:
+      tags:
+        - Protected
+        - Patients
+      summary: Update patient
+      description: Update an existing patient
+      operationId: putPatient
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: account_id
+          in: path
+          description: ID of existing patient
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/PatientPUT'
+        '403':
+          description: Access forbidden
+        '404':
+          description: Not Found
+        '429':
+          description: Too many requests exceeding limit
+
+
+  '/v3/groups':
+
+    post:
+      tags:
+        - Protected
+        - AdminFunctions
+      summary: Create a new price group
+      description: Create a new price group
+      operationId: groupsPOST
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: formData
+          description: ID of the price group
+          required: true
+          type: string
+        - name: name
+          in: formData
+          description: Descriptive name of the price group
+          required: true
+          type: string
+        - name: price
+          in: formData
+          description: Consultation price for the group
+          required: true
+          type: number
+          format: float
+        - name: discount_reason
+          in: formData
+          description: Discount reason
+          type: string
+        - name: member_id_required
+          in: formData
+          description: |
+            Indicate whether the group member id is required for eligibility
+            checking purpose
+          type: boolean
+        - name: eligible
+          in: formData
+          description: CSV file containing the patient eligibility list
+          required: true
+          type: file
+      responses:
+        '201':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Group upload request successful
+              status_code:
+                type: integer
+                example: 201
+        '403':
+          description: Access forbidden
+        '429':
+          description: Too many requests exceeding limit
+
+
+  '/account/login':
+    post:
+      tags:
+        - Protected
+        - General
+      summary: Login
+      description: Login to the system
+      operationId: loginPOST
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/LoginPOSTQuery'
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/LoginPOSTReply'
+        '403':
+          description: Access forbidden
+        '429':
+          description: Too many requests exceeding limit
+
+
+  '/upload/profile/{account_id}':
+    post:
+      tags:
+        - Protected
+        - Patients
+        - Clinicians
+      summary: Upload profile image
+      description: Upload the profile image for an account
+      operationId: profileImagePOST
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: account_id
+          in: path
+          description: ID of account
+          required: true
+          type: string
+        - name: avatar
+          in: formData
+          description: The profile image
+          required: true
+          type: file
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Profile picture uploaded
+              url:
+                type: string
+                example: 'https://tcs-perrier.s3.amazonaws.com/profile/6702393fccd594584b2ed9ab'
+                description: URL for profile image
+              thumbnail:
+                type: string
+                example: 'https://tcs-perrier.s3.amazonaws.com/profile_thumb/6502b938ccd594984b2ec213'
+                description: URL for profile thumbnail image
+        '403':
+          description: Access forbidden
+        '429':
+          description: Too many requests exceeding limit
+
+
+  '/{api_key}/logo.png':
+    get:
+      tags:
+        - Public
+        - General
+      summary: Retrieve logo
+      description: |
+        Retrieve the logo for the customer associated with the specified API
+        key. Note that this version has the API key specified in the URL, so
+        no X-API-KEY header is required.
+      operationId: logoGET
+      produces:
+        - 'image/png'
+      parameters:
+        - name: api_key
+          in: path
+          description: API key
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: file
+
+
+  '/style.css':
+    get:
+      tags:
+        - Public
+        - General
+      summary: Retrieve default theme
+      description: Retrieve the CSS associated with the default theme
+      operationId: styleCSSGET
+      produces:
+        - 'text/css; charset=utf-8'
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: file
+
+
+  '/v4/defaultschedules/{uid}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get default schedule
+      description: Get the default schedule for a clinician
+      operationId: defaultSchedulesGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 570801198468624d3e31d992
+              current:
+                type: integer
+                example: 1
+              apt_duration:
+                type: integer
+                example: 2
+              slots:
+                type: array
+                items:
+                  type: integer
+                  example: 1
+              schedule_type:
+                type: string
+                example: biweekly
+              clinician:
+                type: string
+                example: 570801198468624d3e31d992
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update default schedule
+      description: |
+        Update the default schedule for a clinician
+
+        Sample json (needs all of the slots for the two weeks):
+
+               {
+                  "apt_duration": 2,
+                  "slots": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                  "schedule_type": "biweekly",
+                  "clinician": "565f9a848468620384d753a6"
+               }
+      operationId: defaultSchedulesPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to update default schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/schedules/{uid}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get schedule
+      description: |
+        Get the schedule for a clinician or patient
+        If the cid is that of a patient, it will return the scheduled
+        appointments for the patient as well as his dependents within
+        the time range given (or default time range of two weeks from
+        current time).
+        If the cid is that of a clinician, the clinician's schedule
+        within the given time range will be returned. If first is
+        indicated, only the first available appointment for the given
+        clinician starting at the given time will be returned.
+      operationId: schedulesGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician or patient
+          required: true
+          type: string
+        - name: from
+          in: query
+          description: From date
+          required: false
+          type: integer
+        - name: to
+          in: query
+          description: To date
+          required: false
+          type: integer
+        - name: first_available
+          in: query
+          description: just get the first available appointment slots
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              from:
+                type: integer
+                example: 1464690600
+              to:
+                type: integer
+                example: 1464690600
+              consultations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: apt_scheduled
+                    start:
+                      type: integer
+                      example: 1461061800
+                    end:
+                      type: integer
+                      example: 1461063600
+                    chief_complaint:
+                      type: string
+                      example: Chest Pain
+                    id:
+                      type: string
+                      example: 5706e11b8468621f945b9734
+              schedules:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    start:
+                      type: integer
+                      example: 1461061800
+                    end:
+                      type: integer
+                      example: 1461063600
+                    note:
+                      type: string
+                      example: vacation
+                    id:
+                      type: string
+                      example: 5706e11b8468621f945b9734
+              profile_image_url:
+                type: string
+                example: https://tcs-perrier.s3.amazonaws.com/profile/ab0013e7c26970bd1e
+              slots_t:
+                type: array
+                items:
+                  type: integer
+                  example: 1464690600
+              slots:
+                type: array
+                items:
+                  type: integer
+                  example: 1
+              schedule_type:
+                type: string
+                example: biweekly
+              clinician:
+                type: string
+                example: 570801198468624d3e31d992
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    post:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Create a schedule
+      description: |
+        Create a schedule entry for a clinician.
+        Schedule entris could overlap, we don't enforce anything
+        here (although in theory they should not).
+
+        Sample json:
+
+            {
+                "start": "1456789000",
+                "end": "1456799000",
+                "note": "going to a wedding"
+            }
+      operationId: schedulesPOST
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to create schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/schedules/{uid}/{sid}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get a schedule
+      description: |
+        Get a schedule for a clinician.
+      operationId: scheduleGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: sid
+          in: path
+          description: ID of the schedule
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              start:
+                type: integer
+                example: 1464690600
+              end:
+                type: integer
+                example: 1464690600
+              sid:
+                type: string
+                example: 565f9a848468620384d753a6
+              uid:
+                type: string
+                example: 565f9a848468620384d753a7
+              note:
+                type: string
+                example: sick
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update a schedule
+      description: |
+        Update a schedule entry for a clinician.
+        Only a clinician can update his own schedule.
+
+        Each schedule item is identified by an id. start and end are in unix time format.
+        As with other timestamps, the minutes must be multiples of 15 (the slot size).
+
+        Sample json:
+
+            {
+                "start": "1456789000",
+                "end": "1456799000",
+                "note": "Vacation in Vegas"
+            }
+      operationId: schedulePUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: sid
+          in: path
+          description: ID of the schedule
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to update schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    delete:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Delete a schedule
+      description: Delete a schedule entry for a clinician
+      operationId: scheduleDELETE
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: sid
+          in: path
+          description: ID of the schedule
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Schedule deleted
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/clinicians':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Search clinicians
+      description: |
+        Search clincians by different parameters
+
+        Existing clinician search from previous version is augmented with additional
+        parameters to support the search of clinicians by key_word, datetime,
+        specialty, and time range.
+
+        key_word: will support case insensitive match of first or last name (using
+        starts with, not contains), and case insensitive full match for specialty.
+        when this parameter is present, other searching parameters(except for paging
+        related parameters) will be ignored.
+
+        datetime: search those clinicians who are avaiable for appointment starting
+        at the given time. Unless key_word is present, this will take precendence.
+
+        When neither key_word, nor datetime are present, we will consider specialty
+        and time range. If time range is not specified (if any of from and to is
+        missing) a default time range will be used. Time range should not be more
+        than 14 days. If specialty is missing, we will assume any specialty.
+        Specialty match is full and case insensitive. The result include any clincian
+        who are available for at least one appoitment for the given time range.
+
+
+      operationId: clinicianSearchGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: key_word
+          in: query
+          description: for matching speciality or name
+          required: false
+          type: string
+        - name: count
+          in: query
+          description: limit the number of clinicians per page (default 20)
+          required: false
+          type: integer
+        - name: page_number
+          in: query
+          description: the page to return (default 1)
+          required: false
+          type: integer
+        - name: datetime
+          in: query
+          description: query clinicians who are available at this time
+          required: false
+          type: string
+        - name: specialty
+          in: query
+          description: for matching speciality
+          required: false
+          type: string
+        - name: from
+          in: query
+          description: From date
+          required: false
+          type: string
+        - name: to
+          in: query
+          description: To date
+          required: false
+          type: string
+        - name: pastproviders
+          in: query
+          description: get the past providers based on the completed consultations
+          required: false
+          type: integer
+        - name: uid
+          in: query
+          description: ID of the patient for whom the past providers are searched for
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: 5706e11b8468621f945b9734
+                profile_image_url:
+                  type: string
+                  example: https://tcs-perrier.s3.amazonaws.com/profile/ab0013e7c26970bd1e
+                first_name:
+                  type: string
+                  example: John
+                last_name:
+                  type: string
+                  example: Doe
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+
+  '/v4/consultations':
+    post:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Create a consultation
+      description: |
+        Create a new consultation. The requirement for payment object depends
+        on whether PAY_WHEN_SCHEDULED is set or not in the shared configuration.
+        If it is set, then it is required, otherwise, it is not required (but Ok
+        to have it). Other fields will be the same as creating a normal
+        consultation.
+
+        sample json:
+
+            {
+                "method_of_contact": "video",
+                "chief_complaint": "Paing",
+                "phone_contact": {
+                    "country_code": "1",
+                    "number": "3234567892"
+                },
+                "notification_type": "app",
+                "location": "CA",
+                "payment": {
+                    "transaction_id": "tok_17xm2i2eZvKYlo2CKS06ZzJI",
+                    "vendor": "stripe",
+                    "option": "full"
+                },
+                "apt_start": "1464690600",
+                "patient": "564133648468624d3652b6da",
+                "apt_clinician": "565f9a848468620384d753a6"
+            }
+      operationId: consultationsPOST
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Consultation created
+              url:
+                type: string
+                example: https://api.vmdedix.com/234234223232325
+              state:
+                type: string
+                example: apt_scheduled
+              consultation_id:
+                type: string
+                example: 203843asdfjadf020823452352
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/consultations/{cid}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get a consultation
+      description: |
+        Get a consult based on the consult id.
+      operationId: consultationGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: cid
+          in: path
+          description: consult id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 203843asdfjadf020823452352
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update a consultation
+      description: |
+        Update a consult
+      operationId: consultationPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: cid
+          in: path
+          description: consult id
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Consultation updated
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/config/{cfg_name}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get share config
+      description: |
+        Get the shared configuration. Any logged in user can get the shared configuration. But
+        only admin can change it.
+
+        A complete json response for shared configuration:
+
+            {
+              "CANCEL_CUTOFF_HOURS": 24,
+              "CONSULTATION_FEE": 49.95,
+              "CONSULTATION_FILTER_FIELD": "state",
+              "CONSULTATION_MAX_ATTACHMENTS": 10,
+              "COUNTRY_CONFIGS": {
+                "GLOBAL": {
+                  "ADDRESS_FORMAT": [
+                    [
+                      "address_line1"
+                    ],
+                    [
+                      "address_line2"
+                    ],
+                    [
+                      "district"
+                    ],
+                    [
+                      "city"
+                    ],
+                    [
+                      "state"
+                    ],
+                    [
+                      "zip_code"
+                    ],
+                    [
+                      "country"
+                    ]
+                  ],
+                  "DATE_FORMAT": "MM/DD/YYYY",
+                  "DIALING_CODE": "1",
+                  "LABELS": {
+                    "address_line1": "Address 1",
+                    "address_line2": "Address 2",
+                    "city": "City (Town)",
+                    "country": "Country",
+                    "district": "Suburb (District)",
+                    "state": "State (Province/Island/County)",
+                    "zip_code": "Zip (Postal) Code"
+                  },
+                  "TIME_FORMAT": "HH:mm A Z"
+                },
+                "US": {
+                  "ADDRESS_FORMAT": [
+                    [
+                      "address_line1"
+                    ],
+                    [
+                      "address_line2"
+                    ],
+                    [
+                      "city",
+                      "_comma_",
+                      "state",
+                      "zip_code"
+                    ],
+                    [
+                      "country"
+                    ]
+                  ],
+                  "DATE_FORMAT": "MM/DD/YYYY",
+                  "DIALING_CODE": "1",
+                  "LABELS": {
+                    "address_line1": "Address 1",
+                    "address_line2": "Address 2",
+                    "city": "City",
+                    "country": "Country",
+                    "state": "State",
+                    "zip_code": "Zip Code"
+                  },
+                  "TIME_FORMAT": "HH:mm A Z"
+                }
+              },
+              "CSS_THEME": "main",
+              "CURRENCY_SYMBOL": "$",
+              "CURRENCY_SYMBOL_POSITION": "before",
+              "CUSTOMER_TIMEZONE": "US/Pacific",
+              "DECIMAL_MARK": ".",
+              "DEFAULT_COUNTRY": "US",
+              "DEFAULT_LOCALE": "en-US",
+              "FAX_FEE": 15.0,
+              "HIDE_PHONE_MSG": "To block your number, dial *67 before the phone number.",
+              "HOLIDAYS": [
+                {
+                  "date": 1464296606,
+                  "description": "memorial day"
+                }
+              ],
+              "HOURS_OF_OPERATION": [
+                {
+                  "day": 1,
+                  "hours": [
+                    {
+                      "end": 1700,
+                      "start": 900
+                    }
+                  ]
+                },
+                {
+                  "day": 2,
+                  "hours": [
+                    {
+                      "end": 1700,
+                      "start": 900
+                    }
+                  ]
+                },
+                {
+                  "day": 3,
+                  "hours": [
+                    {
+                      "end": 1700,
+                      "start": 900
+                    }
+                  ]
+                },
+                {
+                  "day": 4,
+                  "hours": [
+                    {
+                      "end": 1700,
+                      "start": 900
+                    }
+                  ]
+                },
+                {
+                  "day": 5,
+                  "hours": [
+                    {
+                      "end": 1700,
+                      "start": 900
+                    }
+                  ]
+                }
+              ],
+              "MEASUREMENT_UNIT": "imperial",
+              "OPENTOK_API_KEY": "45139172",
+              "PERFORM_ELIGIBILITY_CHECK": false,
+              "SCHEDULE_CUTOFF_DAYS": 180,
+              "STRIPE_CURRENCY": "USD",
+              "PAY_WHEN_SCHEDULED": false,
+              "STRIPE_PUBLIC_KEY": "pk_test_6pRNASCoBOKtIshFeQd4XMUh"
+            }
+      operationId: configGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: cfg_name
+          in: path
+          description: name of the configuration
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update configuration
+      description: |
+        Update the shared configuration. Update of HOURS_OF_OPERATION must be for all, there is no
+        partial update for HOURS_OF_OPERATION. Same goes for HOLIDAYS. A PUT without HOURS_OF_OPERATION
+        or HOLIDAYS field will leave that field unchanged.
+
+        Only admin can update shared configurations.
+
+        Format of the start and end for HOURS_OF_OPERATION is HHMM. For example 1830 will mean 18:30 pm.
+        All time should be in the user's timezone. The GET will get the same value as when saved/updated.
+        "day" field is an integer that indicate which day of the week. Allowed values are 0 to 6 with 0
+        indicates Sunday, 1 indicates Monday, etc.
+
+        Sample json:
+
+                 {
+                  "HOURS_OF_OPERATION": [
+                    {
+                      "day": 1,
+                      "hours": [
+                        {
+                          "end": 1700,
+                          "start": 900
+                        }
+                      ]
+                    },
+                    {
+                      "day": 2,
+                      "hours": [
+                        {
+                          "end": 1700,
+                          "start": 900
+                        }
+                      ]
+                    },
+                    {
+                      "day": 3,
+                      "hours": [
+                        {
+                          "end": 1700,
+                          "start": 900
+                        }
+                      ]
+                    },
+                    {
+                      "day": 4,
+                      "hours": [
+                        {
+                          "end": 1700,
+                          "start": 900
+                        }
+                      ]
+                    },
+                    {
+                      "day": 5,
+                      "hours": [
+                        {
+                          "end": 1700,
+                          "start": 900
+                        }
+                      ]
+                    }
+                  ],
+                  "CANCEL_CUTOFF_HOURS": 24,
+                  "SCHEDULE_CUTOFF_DAYS": 180,
+                  "PAY_WHEN_SCHEDULED": false
+                }
+      operationId: configPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: cfg_name
+          in: path
+          description: name of config
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Configuration shared updated
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+############
+definitions:
+
+  #### Embedded objects
+
+  Address:
+    properties:
+      address_line1:
+        type: string
+        example: '6A Liberty'
+        description: Address line1
+      address_line2:
+        type: string
+        example: TCS
+        description: Address line2
+      district:
+        type: string
+        example: 'District 9'
+        description: District
+      city:
+        type: string
+        example: Aliso Viejo
+        description: City
+      state:
+        type: string
+        example: California
+        description: State
+      zip_code:
+        type: string
+        example: '92656'
+        description: Zip/Postal code
+      sorting_code:
+        type: string
+        example: '1724'
+        description: Sorting code
+      country:
+        type: string
+        example: US
+        description: '2-letter ISO country code'
+
+
+  Insurance:
+    properties:
+      insurance_id:
+        type: string
+        example: 'XE-1234'
+        description: Membership ID XXX
+      company:
+        type: string
+        example: Red Cross and Red Shield
+        description: Insurance company name XXX
+      group:
+        type: string
+        example: ComTCS
+        description: Insurance group name XXX
+      first_name:
+        type: string
+        example: James
+      last_name:
+        type: string
+        example: Kirk
+
+
+  MedicalHistory:
+    properties:
+      created:
+        type: integer
+        example: 1457135479
+        description: Creation timestamp in UTC
+      allergies:
+        type: array
+        items:
+          type: string
+      family_history:
+        type: array
+        items:
+          type: string
+      medical_condition:
+        type: array
+        items:
+          type: string
+      medications:
+        type: array
+        items:
+          type: string
+      social_history:
+        type: object
+        properties:
+          smokes:
+            type: string
+            enum: [yes, no]
+          num_packs:
+            type: string
+            example: '0'
+      surgical_condition:
+        type: array
+        items:
+          type: string
+
+
+  PatientEmployerGroup:
+    properties:
+      group_id:
+        type: string
+        example: 'ComTCS Retirees'
+        description: Price Group ID
+      member_id:
+        type: string
+        example: '3724116'
+        description: Member ID
+
+
+  Pharmacy:
+    properties:
+      name:
+        type: string
+        example: 'CVS #663'
+      address:
+        $ref: "#/definitions/Address"
+      phone:
+        $ref: "#/definitions/Phone"
+      ncpdpid:
+        type: string
+        example: '1466033'
+        description: National Council for Prescription Drug Programs ID
+      email:
+        type: string
+        example: dr.suess@thelorax.com
+      fax:
+        $ref: "#/definitions/Phone"
+
+
+  Phone:
+    required:
+      - country_code
+      - number
+    properties:
+      country_code:
+        type: string
+        example: '44'
+        description: Country calling code
+      number:
+        type: string
+        example: '9494530000'
+        description: Phone number
+
+
+  PrimaryCare:
+    properties:
+      name:
+        type: string
+        example: 'Dr. Suess'
+        description: Name of primary care physician
+      phone:
+        $ref: "#/definitions/Phone"
+      address:
+        $ref: "#/definitions/Address"
+      email:
+        type: string
+        example: dr.suess@thelorax.com
+      fax:
+        $ref: "#/definitions/Phone"
+
+
+  #### Queries/Replies
+
+  AccountCommon:
+    # fields common to all VM "account" APIs derived from the AccountResource
+    # and AccountsResource classes
+    properties:
+      application:
+        type: string
+        example: vmedix
+        description: |
+          VirtuMedix internal application name.  For an actual application,
+          please contact the VM team for specific details.
+      device:
+        type: string
+        example: iPhone6
+        description: Mobile device name
+      email:
+        type: string
+        example: james.kirk@starfleet.com
+        description: Email address.  Required when creating a new account.
+      enabled:
+        type: boolean
+        example: True
+        description: Indicates whether the account is enabled in the system
+      first_name:
+        type: string
+        example: James
+        description: First Name.  Required when creating a new account.
+      gender:
+        type: string
+        example: male
+        description: Gender
+        enum: [male, female]
+      last_name:
+        type: string
+        example: Kirk
+        description: Last Name.  Required when creating a new account.
+      middle_name:
+        type: string
+        example: Tiberius
+        description: Last Name
+      os:
+        type: string
+        example: 'iOS 9.0'
+        description: Mobile device OS version
+      password:
+        type: string
+        example: Abcd1234
+        description: |
+          Account password, which must satify the password policy.  This field
+          can only be set with the PUT method, is ignored by the POST method,
+          and is not returned by the GET method.
+      platform:
+        type: string
+        example: ios
+        description: mobile platform
+        enum: [ios, android]
+      phone:
+        $ref: "#/definitions/Phone"
+        # description: 'primary phone number'
+      push_token:
+        type: string
+        example: '42090ac7b3a1b889b08a54ff05db82d7de98601472928c51e7f8c12dfbc3d1c3'
+        description: iOS or Android push notification token value
+      timezone:
+        type: string
+        example: US/Pacific
+        description: 'https://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
+      version:
+        type: string
+        example: '3.2.0'
+        description: VirtuMedix client version
+
+
+  PatientCommon:
+    # fields common to all VM "Patient" APIs derived from the PatientResource
+    # and PatientsResource classes
+    properties:
+      address:
+        $ref: "#/definitions/Address"
+      birthdate:
+        type: integer
+        example: 1457401469
+        description: |
+          UTC timestamp value denoting noon on the birthdate.  For example, if
+          the birthdate is 3/15/16 (for any timezone), 1458043200 should be
+          sent as the value since it correponds to "2016-03-15T12:00:00+00:00".
+      group:
+        $ref: "#/definitions/PatientEmployerGroup"
+      height:
+        type: number
+        format: float
+        example: 1.1938
+        description: height in meter
+      insurance:
+        $ref: "#/definitions/Insurance"
+      master_id:
+        type: string
+        example: '54fe081b02b9d757d898ff05'
+        description: ID of parent account
+      phone2:
+        $ref: "#/definitions/Phone"
+        # description: secondary phone number
+      phone_type:
+        type: string
+        example: mobile
+        description: type for Phone collection
+        enum: [mobile, home, work]
+      preferred_pharmacy:
+        $ref: "#/definitions/Pharmacy"
+      primary_care:
+        $ref: "#/definitions/PrimaryCare"
+      weight:
+        type: number
+        format: float
+        example: 13.066
+        description: weight in kilogram
+
+
+  PatientsGET:
+    allOf:
+    - $ref: "#/definitions/AccountCommon"
+    - $ref: "#/definitions/PatientCommon"
+    - type: object
+      properties:
+        dependents:
+          type: array
+          items:
+            $ref: "#/definitions/DependentsGET"
+        medical_history:
+          $ref: "#/definitions/MedicalHistory"
+
+
+  PatientsPOST:
+    allOf:
+    - $ref: "#/definitions/AccountCommon"
+    - $ref: "#/definitions/PatientCommon"
+
+
+  PatientGET:
+    allOf:
+    - $ref: "#/definitions/AccountCommon"
+    - $ref: "#/definitions/PatientCommon"
+    - type: object
+      properties:
+        active_consultation:
+          type: string
+          example: '54fe087cc2b9c7579898ffbc'
+          description: ID of active consultation
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: '[push, sms, phone_call]'
+          description: client notification capabilities
+        dependents:
+          type: array
+          items:
+            $ref: "#/definitions/DependentGET"
+            # XXX should try to get circular reference working
+        medical_history:
+          $ref: "#/definitions/MedicalHistory"
+        url:
+          type: string
+          example: '/v3/patients/54fe081b02b9d757d898ff05'
+          description: Endpoint for accessing this account
+
+
+  # exactly same as PatientGET, but needed to work-around circular reference issue
+  DependentGET:
+    allOf:
+    - $ref: "#/definitions/PatientGET"
+
+
+  PatientPUT:
+    allOf:
+    - $ref: "#/definitions/AccountCommon"
+    - $ref: "#/definitions/PatientCommon"
+
+
+  # exactly same as PatientsGET, but needed to work-around circular reference issue
+  DependentsGET:
+    allOf:
+    - $ref: "#/definitions/PatientsGET"
+
+
+  LoginPOSTQuery:
+    required:
+      - username
+      - password
+    properties:
+      application:
+        type: string
+        example: vmedix
+        description: |
+          VirtuMedix internal application name.  For an actual application,
+          please contact the VM team for specific details.
+      device:
+        type: string
+        example: iPhone6
+        description: mobile device name
+      os:
+        type: string
+        example: 'iOS 9.0'
+        description: mobile device OS version
+      password:
+        type: string
+        example: mypassword
+        description: Password associated with account
+      platform:
+        type: string
+        example: ios
+        description: mobile platform
+        enum: [ios, android]
+      push_token:
+        type: string
+        example: '42090ac7b3a1b889b08a54ff05db82d7de98601472928c51e7f8c12dfbc3d1c3'
+        description: iOS or Android push token value
+      username:
+        type: string
+        example: james.kirk@starfleet.com
+        description: Email associated with account
+      version:
+        type: string
+        example: '3.2.0'
+        description: VirtuMedix client version
+
+
+  LoginPOSTReply:
+    properties:
+      _links:
+        type: array
+        items:
+          $ref: "#/definitions/LinkItem"
+      access_token:
+        type: string
+        description: |
+          The access token must be sent with all subsequent protected API queries
+          in the HTTP header as 'Authorization: Bearer <access_token>'.
+        example: 'eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJnZW5lcmF0aW9uIjogMywgInVzZXJfaWQiOiAiNTRmZTA4MWIwMmI5ZDc1N2Q4OThmZjA1IiwgImV4cCI6IDE0NTc3NTA1ODJ9.9ZY1SqurE8XENaLoboEW8h3rhgai9YHZR2RM7X_6IEs'
+      account_id:
+        type: string
+        description: ID of account
+        example: '54fe081b02b9d757d898ff05'
+      account_type:
+        type: string
+        description: Accout type
+        example: patient
+
+
+  LinkItem:
+    properties:
+      href:
+        type: string
+        description: URL to access account
+        example: '/v3/patients/54fe081b02b9d757d898ff05'
+      method:
+        type: string
+        description: method to access URL
+        example: GET
+      rel:
+        type: string
+        description: function
+        example: update_profile
+

@@ -13,13 +13,13 @@ from uuid import uuid4
 from twilio.access_token import AccessToken, ConversationsGrant
 from settings import live_config
 
-def new_tokens():
+def new_twilio_video_tokens():
 
     # get credentials from config
-    account_sid = live_config('TWILIO_ACCOUNT_SID')
-    api_key = live_config('TWILIO_API_KEY')
-    api_secret = live_config('TWILIO_API_SECRET')
-    profile_id = live_config('TWILIO_CONFIGURATION_SID')
+    account_sid = 'AC6fbff77992d10662d2d14d9facc494c3' # live_config('TWILIO_ACCOUNT_SID')
+    api_key = 'SK66c0077df076e009565295cd006c0925' #live_config('TWILIO_API_KEY')
+    api_secret = '73w1nYUgPH0sI2KZtgp7qFlSGDGjgn8n' #live_config('TWILIO_API_SECRET')
+    profile_id = 'VSace2c5699219999e4edfcd4b94d7be85' #live_config('TWILIO_CONFIGURATION_SID')
     id_patient = str(uuid4())
     id_clinician = str(uuid4())
 
@@ -40,8 +40,9 @@ def new_tokens():
     # only one video provider for a given consult.
     return {
         # patient will make the connection so we only keep the clinician id.
-        'video_id': token_clinician.identity,
-        'video_token_clinician': token_clinician.to_jwt(),
-        'video_token_patient': token_patient.to_jwt(),
+        'twilio_video_id_clinician': token_clinician.identity,
+        'twilio_video_token_clinician': token_clinician.to_jwt(),
+        'twilio_video_id_patient':  token_patient.identity,
+        'twilio_video_token_patient': token_patient.to_jwt(),
         'video_provider': 'twilio',
     }
