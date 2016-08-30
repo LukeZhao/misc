@@ -538,7 +538,159 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/timeoffs/{uid}'
+  '/v4/schedule/appointments/{uid}':
+    post:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Create an appointment
+      description: |
+        Create an appointment.
+
+        Sample json:
+
+            {
+                "start": "1473431400",
+                "end": "1473438600",
+                "info": "chest pain",
+                "patient": "560dcedd02b9d75f7e663653",
+                "clinician": "55e7210f02b9d75d61fbe02b"
+            }
+      operationId: appointmentsPOST
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the user
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to create schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: get appointments
+      description: |
+        get appointments.
+      operationId: appointmentsGet
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the user
+          required: true
+          type: string
+        - name: fields
+          in: query
+          description: fields and ordering
+          required: True
+          type: string
+      responses:
+        '200':
+          description: Success
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/schedule/appointment/{appt_id}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get an appointment
+      description: Get the appointment instance
+      operationId: appointmentGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: appt_id
+          in: path
+          description: ID of the appointment
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update appointment
+      description: |
+        Update the appointment for a user
+
+        Sample json:
+
+            {
+                "start": "1473431400",
+                "end": "1473438600",
+                "info": "Headache",
+                "clinician": ""55e7210f02b9d75d61fbe02b""
+            }
+      operationId: appointmentPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: appt_id
+          in: path
+          description: ID of the appointment
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Request to update default schedule successful
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/schedule/timeoffs/{uid}':
     post:
       tags:
         - Protected
@@ -686,7 +838,7 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedules/calendar/{uid}':
+  '/v4/schedule/calendar/{uid}':
     get:
       tags:
         - Protected
@@ -703,6 +855,21 @@ paths:
           in: path
           description: ID of the clinician or patient
           required: true
+          type: string
+        - name: start
+          in: query
+          description: From date
+          required: True
+          type: string
+        - name: end
+          in: query
+          description: To date
+          required: True
+          type: string
+        - name: fields
+          in: query
+          description: fields and ordering
+          required: True
           type: string
       responses:
         '200':
