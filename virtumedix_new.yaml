@@ -538,7 +538,7 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/appointments/{uid}':
+  '/v4/schedule/{uid}/appointments':
     post:
       tags:
         - Protected
@@ -627,7 +627,7 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/appointment/{appt_id}':
+  '/v4/schedule/{uid}/appointments/{appt_id}':
     get:
       tags:
         - Protected
@@ -639,6 +639,11 @@ paths:
       produces:
         - application/json
       parameters:
+        - name: uid
+          in: path
+          description: ID of the user
+          required: true
+          type: string
         - name: appt_id
           in: path
           description: ID of the appointment
@@ -676,6 +681,11 @@ paths:
       produces:
         - application/json
       parameters:
+        - name: uid
+          in: path
+          description: ID of the user
+          required: true
+          type: string
         - name: appt_id
           in: path
           description: ID of the appointment
@@ -700,7 +710,48 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/timeoffs/{uid}':
+  '/v4/schedule/{uid}/timeoffs':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get a timeoff
+      description: Get the timeoff instances
+      operationId: timeoffsGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
+        - name: start
+          in: query
+          description: From date
+          required: True
+          type: string
+        - name: end
+          in: query
+          description: To date
+          required: True
+          type: string
+        - name: fields
+          in: query
+          description: fields and ordering
+          required: True
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
     post:
       tags:
         - Protected
@@ -746,7 +797,7 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/timeoff/{timeoff_id}':
+  '/v4/schedule/{uid}/timeoffs/{timeoff_id}':
     get:
       tags:
         - Protected
@@ -758,6 +809,11 @@ paths:
       produces:
         - application/json
       parameters:
+        - name: uid
+          in: path
+          description: ID of the clinician
+          required: true
+          type: string
         - name: timeoff_id
           in: path
           description: ID of the timeoff
@@ -794,6 +850,11 @@ paths:
       produces:
         - application/json
       parameters:
+        - name: uid
+          in: path
+          description: ID of the user
+          required: true
+          type: string
         - name: timeoff_id
           in: path
           description: ID of the timeoff
@@ -829,6 +890,11 @@ paths:
       produces:
         - application/json
       parameters:
+        - name: uid
+          in: path
+          description: ID of the user
+          required: true
+          type: string
         - name: timeoff_id
           in: path
           description: ID of the clinician
@@ -848,7 +914,7 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/calendar/{uid}':
+  '/v4/schedule/{uid}/calendar':
     get:
       tags:
         - Protected
@@ -891,7 +957,7 @@ paths:
         '400':
           description: Validation error
 
-  '/v4/schedule/availability/{uid}':
+  '/v4/schedule/{uid}/availability':
     get:
       tags:
         - Protected
