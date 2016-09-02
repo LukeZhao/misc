@@ -710,6 +710,183 @@ paths:
         '400':
           description: Validation error
 
+  '/v4/consultations':
+    post:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Create a consultation
+      description: |
+        Create a new consultation. The requirement for payment object depends
+        on whether PAY_WHEN_SCHEDULED is set or not in the shared configuration.
+        If it is set, then it is required, otherwise, it is not required (but Ok
+        to have it). Other fields will be the same as creating a normal
+        consultation.
+
+        sample json:
+
+            {
+                "method_of_contact": "video",
+                "chief_complaint": "Paing",
+                "phone_contact": {
+                    "country_code": "1",
+                    "number": "3234567892"
+                },
+                "notification_type": "app",
+                "location": "CA",
+                "payment": {
+                    "transaction_id": "tok_17xm2i2eZvKYlo2CKS06ZzJI",
+                    "vendor": "stripe",
+                    "option": "full"
+                },
+                "apt_start": "1464690600",
+                "patient": "564133648468624d3652b6da",
+                "apt_clinician": "565f9a848468620384d753a6"
+            }
+      operationId: consultationsPOST
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Consultation created
+              url:
+                type: string
+                example: https://api.vmdedix.com/234234223232325
+              state:
+                type: string
+                example: apt_scheduled
+              consultation_id:
+                type: string
+                example: 203843asdfjadf020823452352
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: get consultations
+      description: |
+        Get the consultations for certain condition
+      operationId: consultationsGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: search
+          in: query
+          description: matching name
+          required: false
+          type: string
+        - name: patient
+          in: query
+          description: patient uid
+          required: false
+          type: string
+        - name: clinician
+          in: query
+          description: clinician uid
+          required: false
+          type: string
+        - name: fields
+          in: query
+          description: fields to get and sort on
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
+  '/v4/consultations/{cid}':
+    get:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Get a consultation
+      description: |
+        Get a consult based on the consult id.
+      operationId: consultationGET
+      consumes: []
+      produces:
+        - application/json
+      parameters:
+        - name: cid
+          in: path
+          description: consult id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 203843asdfjadf020823452352
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+    put:
+      tags:
+        - Protected
+        - Scheduler
+      summary: Update a consultation
+      description: |
+        Update a consult
+      operationId: consultationPUT
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: cid
+          in: path
+          description: consult id
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            type: object
+            properties:
+              msg:
+                type: string
+                example: Consultation updated
+        '403':
+          description: Access forbidden
+        '400':
+          description: Validation error
+
   '/v4/schedule/{uid}/timeoffs':
     get:
       tags:
