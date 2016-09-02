@@ -616,8 +616,13 @@ paths:
           type: string
         - name: fields
           in: query
-          description: fields and ordering
-          required: True
+          description: |
+            List of comma-separated fields to return.  A plus (ascending)
+            or minus (descending) sign can be prefixed to each field to
+            indicate the desired sorting order, although applying the prefix
+            to multiple fields can lead to an undefined sorting behavior.
+            Example: 'fields=account_id,-first_name'.
+          required: false
           type: string
       responses:
         '200':
@@ -739,9 +744,8 @@ paths:
                     "vendor": "stripe",
                     "option": "full"
                 },
-                "apt_start": "1464690600",
                 "patient": "564133648468624d3652b6da",
-                "apt_clinician": "565f9a848468620384d753a6"
+                "clinician": "565f9a848468620384d753a6"
             }
       operationId: consultationsPOST
       consumes:
@@ -806,8 +810,13 @@ paths:
           type: string
         - name: fields
           in: query
-          description: fields to get and sort on
-          required: true
+          description: |
+            List of comma-separated fields to return.  A plus (ascending)
+            or minus (descending) sign can be prefixed to each field to
+            indicate the desired sorting order, although applying the prefix
+            to multiple fields can lead to an undefined sorting behavior.
+            Example: 'fields=account_id,-first_name'.
+          required: false
           type: string
       responses:
         '200':
@@ -836,6 +845,11 @@ paths:
           in: path
           description: consult id
           required: true
+          type: string
+        - name: access_reason
+          in: query
+          description: reason to access
+          required: false
           type: string
       responses:
         '200':
@@ -916,8 +930,13 @@ paths:
           type: string
         - name: fields
           in: query
-          description: fields and ordering
-          required: True
+          description: |
+            List of comma-separated fields to return.  A plus (ascending)
+            or minus (descending) sign can be prefixed to each field to
+            indicate the desired sorting order, although applying the prefix
+            to multiple fields can lead to an undefined sorting behavior.
+            Example: 'fields=account_id,-first_name'.
+          required: false
           type: string
       responses:
         '200':
@@ -1121,8 +1140,13 @@ paths:
           type: string
         - name: fields
           in: query
-          description: fields and ordering
-          required: True
+          description: |
+            List of comma-separated fields to return.  A plus (ascending)
+            or minus (descending) sign can be prefixed to each field to
+            indicate the desired sorting order, although applying the prefix
+            to multiple fields can lead to an undefined sorting behavior.
+            Example: 'fields=account_id,-first_name'.
+          required: false
           type: string
       responses:
         '200':
