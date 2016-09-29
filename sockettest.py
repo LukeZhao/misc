@@ -1,13 +1,15 @@
 from __future__ import absolute_import
 from locust import HttpLocust, TaskSet, clients, task, events
-from datetime import datetime, timedelta
-
 clients.requests.packages.urllib3.disable_warnings()
 
 TCS_API_KEY = "tcs.virtumedix.web.4.A9Pq0okYxe9y97crtT2MX2xslhA"
 
 import sys
+from os import path
 sys.path.append('lib')
+print path.dirname(path.abspath(__file__))
+sys.path.append(path.dirname(path.abspath(__file__)))
+from datetime import datetime, timedelta
 import arrow
 import io
 import string
