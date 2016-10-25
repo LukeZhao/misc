@@ -13,7 +13,7 @@ import arrow
 import json
 from phonenumbers import (parse, is_valid_number, region_code_for_country_code,
                           format_number, PhoneNumberFormat as PNF)
-from flask import url_for
+from flask import url_for, jsonify
 from settings import live_config
 import datetime
 from mongoengine import ValidationError
@@ -23,6 +23,8 @@ reg_dmy = re.compile('(0?[1-9]|[12][0-9]|3[01])/(1[0-2]|0?[1-9])/[12]\d{3}')
 reg_date = {'M/D/YYYY': reg_mdy, 'D/M/YYYY': reg_dmy}
 holiday_id = '000000000000000000000000'
 
-def get_timestamp(year, month, day, hour, minute):
-    return (arrow.get(datetime.datetime(year, month, day, hour, ninute)).timestamp,
-            arrow.get(datetime.datetime(year, month, day, hour, ninute)).replace(minutes=30).timestamp)
+def get_time(d=7):
+    aa = arrow.get().replace(days=d).timestamp
+    bb = arrow.get().replace(days=d, minutes=30).timestamp
+    return {'start': aa, 'end': bb}
+    
