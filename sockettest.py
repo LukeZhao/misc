@@ -28,8 +28,12 @@ admin = AdminUser()
 pat_id = '560dcedd02b9d75f7e663653'
 cli_id = '55e7210f02b9d75d61fbe02b'
 
+total_cnt = 0
 def on_message(ws, message):
-    print message
+    global total_cnt
+    total_cnt = total_cnt + 1
+    pass 
+    #print message
 
 def on_error(ws, error):
     print error
@@ -71,7 +75,7 @@ class PatientTasks(TaskSet):
 
     def run_socket(self):
         self.ensure_login()
-        websocket.enableTrace(True)
+        #websocket.enableTrace(True)
         ws = websocket.WebSocketApp("wss://api-virtumedix-vm2.nimaws.com/notifications/tcs.virtumedix.web.4.A9Pq0okYxe9y97crtT2MX2xslhA",
                                     on_message = on_message,
                                     on_error = on_error,
@@ -80,21 +84,19 @@ class PatientTasks(TaskSet):
         ws.run_forever()
   
     def on_open(self, ws):
-        print 'in on_open', ws
         def run(*args):
-            print 'in run', ws
             msg = {
                 'type': 'auth',
                 'time': arrow.get().timestamp,
                 'source': pat_id,
                 'message': self.auth_token
                 }
-            print json.dumps(msg)
             ws.send(json.dumps(msg))
-            print 'sent auth'
             time.sleep(5)
-            for i in range(10):
-                time.sleep(10)
+            tests = 10000
+            start = arrow.get()
+            for i in range(tests):
+                #time.sleep(10)
                 msg = {
                     'type': 'ping',
                     'time': arrow.get().timestamp,
@@ -102,12 +104,15 @@ class PatientTasks(TaskSet):
                     'source': pat_id,
                     'message': 'socket ping'
                     }
-                print json.dumps(msg)
                 ws.send(json.dumps(msg))
-                print 'sent ping {}'.format(i)
+                #print 'sent ping {}'.format(i)
             time.sleep(1)
+            while total_cnt < tests:
+                time.sleep(1)
+            print 'tests: {}'.format(total_cnt)
             ws.close()
             print "thread terminating..."
+            print 'takes: {}'.format((arrow.get() - start).total_seconds())
         thread.start_new_thread(run, ())
  
 class ClinicianTasks(TaskSet):
