@@ -37,25 +37,33 @@ def search(query='*', types=[], fields=[],
     s = s.filter(f)
     if fields:
         s = s.fields(fields)
-    s = s.query('query_string', query=query)
-    s = s.execute()
+    ss = s.query('query_string', query=query)
+    ss = ss.execute()
     total_time = 0
     net_time = 0
     total_request = 0
     by_ends = {}
-    for r in s.hits.hits:
-        sss = r.get('_source')
-        total_request = total_request + 1
-        total_time = total_time + sss.get('total_time')
-        net_time = net_time + sss.get('func_time')
-        key = '{}_{}'.format(sss.get('func'), sss.get('method'))
-        rec = by_ends.get(key, None)
-        if rec is None:
-            by_ends[key] = {'c':0, 't': 0, 'n': 0}
-            rec = by_ends.get(key)
-        rec['c'] = rec['c'] + 1
-        rec['t'] = rec['t'] + sss.get('total_time')
-        rec['n'] = rec['n'] + sss.get('func_time')
+    t_size = ss.hits.total
+    page = 1
+    per_page = 1000
+    while t_size > 0:
+        ss = s.query('query_string', query=query)
+        ss = ss[(page-1)*per_page:page*per_page].execute()
+        for r in ss.hits.hits:
+            sss = r.get('_source')
+            total_request = total_request + 1
+            total_time = total_time + sss.get('total_time')
+            net_time = net_time + sss.get('func_time')
+            key = '{}_{}'.format(sss.get('func'), sss.get('method'))
+            rec = by_ends.get(key, None)
+            if rec is None:
+                by_ends[key] = {'c':0, 't': 0, 'n': 0, 'k': key}
+                rec = by_ends.get(key)
+            rec['c'] = rec['c'] + 1
+            rec['t'] = rec['t'] + sss.get('total_time')
+            rec['n'] = rec['n'] + sss.get('func_time')
+        t_size = t_size - per_page
+        page = page + 1
     return (total_request, total_time, net_time, by_ends)
 
 def page(*args, **kwargs):
@@ -71,9 +79,13 @@ if __name__ == '__main__':
         # find RT and websocket message.
         switch_customer(customer)
         (cnt, total, net, ends) = page(types=['request'], start=start, end=end)
-        print('Cnt: {}, Total: {}, Net: {}'.format(cnt, total, net))
-        for key, rec in ends.viewitems():
-            print key, rec['c'], rec['t'], rec['n']
+        recs = ends.values()
+        for rec in recs:
+            rec['a'] = rec['t']/rec['c']
+        recs.sort(key=lambda x: x['a'], reverse=True)
+        print('Cnt: {}, Total: {}, Net: {}, Avg: {}'.format(cnt, "%.2f" % total, "%.2f" % net, "%.2f" % (total/cnt)))
+        for rec in recs:
+            print rec['k'].rjust(40), repr(rec['c']).rjust(10), ("%.2f" % rec['t']).rjust(10), ("%.2f" % rec['n']).rjust(10), ("%.2f" % rec['a']).rjust(5)
     except:
         raise
         print("unhandled_exception")
