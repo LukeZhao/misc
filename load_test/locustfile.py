@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 
 clients.requests.packages.urllib3.disable_warnings()
 
-TCS_API_KEY = "tcs.virtumedix.web.3.xGZTElmkstoLdKWpM-Q67_D6p5w"
+TCS_API_KEY_CS = "tcs.virtumedix.web.3.xGZTElmkstoLdKWpM-Q67_D6p5w"
+TCS_API_KEY = TCS_API_KEY_CS
 
 
 class AdminTasks(TaskSet):
