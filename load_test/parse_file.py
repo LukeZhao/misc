@@ -68,10 +68,8 @@ if __name__ == '__main__':
             cc = cc.split('.')[0]
             if cc != customer:
                 continue
-            api_response_time = api_response_time + float(fs[10])
             url = fs[6].split('?')[0]
-            if url.find('/notifications/') >= 0:
-                continue
+            api_response_time = api_response_time + float(fs[10])
             if api_calls.get(url):
                 api_calls[url] = api_calls[url] + 1
             else:
