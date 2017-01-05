@@ -1,0 +1,247 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+    <div id="id_plugins"></div><br />
+    <div id="id_status"></div><br />
+    <script src="https://static.opentok.com/v2/js/opentok.js" charset="utf-8"></script>
+    <script charset="utf-8">
+        var plugins = "";
+        for (var i = 0; i < navigator.plugins.length; i++)
+        {
+            plugins += navigator.plugins[i].name;
+            if (i != (navigator.plugins.length - 1))
+            {
+                plugins += ", ";
+            }
+        }
+        document.getElementById("id_plugins").innerHTML = "<p>".concat(plugins, "</p>");
+
+        var apiKey = '45139172';
+        var sessionId = '1_MX40NTEzOTE3Mn5-MTQ4MjM2MjkzNTQ1MH56UW43NUdoYXc0ZHZZOUY3cTU2VnJSV25-fg';
+        var token = 'T1==cGFydG5lcl9pZD00NTEzOTE3MiZzaWc9MWQwOWVlNTM3ZGQxZjA2OGZlNDQxODIwYWEwYWZjYmM2ZTA4YjY3Njpub25jZT0xNzQ4MzAmY3JlYXRlX3RpbWU9MTQ4MjM2MjkzNSZyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTFfTVg0ME5URXpPVEUzTW41LU1UUTRNak0yTWprek5UUTFNSDU2VVc0M05VZG9ZWGMwWkhaWk9VWTNjVFUyVm5KU1YyNS1mZw==';
+        var session = null;
+        var publisher = OT.initPublisher('publisher', {
+            insertMode: 'append',
+            width: '250px',
+            height: '150px'
+        });
+        var subscriber = null;
+        var subStream = null;
+        var endSession = false;
+
+        function connect_again()
+        {
+            try {
+                //session.disconnect();
+                if (session != null)
+                    session.setState("disconnected");
+                console.log('step 92 state is: ', session.state);
+            } catch (err) {
+                console.log('There was an error setting session state: ', err.code, err.message);
+            }
+            session.connect(token, function (error) {
+                // If the connection is successful, initialize a publisher and publish to the session
+                console.log('Step 91');
+                if (!error) {
+                    try {
+                        session.publish(publisher);
+                    }
+                    catch (err) {
+                        console.log('There was an error connecting to the session: ', err.code, err.message);
+                    }
+                } else {
+                    console.log('There was an error connecting to the session: ', error.code, error.message);
+                }
+            });
+        }
+
+        function sub_stream()
+        {
+            var found = false;
+            session.streams.forEach(function (st) {
+                console.log('stream is: ', st);
+                if (st.connection.connectionId == session.connection.connectionId || found)
+                    return;
+                subscriber = session.subscribe(st, 'subscriber', {
+                    insertMode: 'append',
+                    width: '500px',
+                    height: '350px'
+                });
+                found = true;
+            });
+            if (!found)
+                setTimeout(sub_stream, 3000);
+        }
+
+        function request_publish()
+        {
+            session.signal(
+              {
+                  data: "hello",
+                  type: "publish"
+              },
+              function (error) {
+                  if (error) {
+                      console.log("signal error ("
+                                   + error.name
+                                   + "): " + error.message);
+                      if (error.name == "OT_NOT_CONNECTED")
+                          connect_session();
+                  } else {
+                      console.log("signal sent.");
+                  }
+              }
+            );
+            setTimeout(sub_stream, 3000);
+        }
+
+        function connect_session() {
+            console.log('Step 1');
+            if (endSession)
+                return;
+            //if (session != null)
+            //    console.log('Step 10: sessionstate: ', session.state);
+            //if (subscriber != null) {
+            //    subscriber.stream = null;
+            //}
+            console.log('Step 2');
+            //try {
+            //    if (session != null)
+            //        session.unpublish(publisher);
+            //} catch (err) { }
+            console.log('Step 3');
+            try {
+                //session.disconnect();
+                if (session != null)
+                    session.setState("disconnected");
+                session = null;
+            } catch (err) { }
+            console.log('Step 4');
+            try {
+                session = OT.initSession(apiKey, sessionId);
+            } catch (err) {
+                console.log('There was an error creating a session: ', err.code, err.message);
+            }
+            console.log('Step 5');
+
+            session.on("signal:publish", function (event) {
+                if (event.from.id == session.connection.connectionId)
+                    return;
+                console.log("Signal sent from connection for publish " + event.from.id + " session state: " + session.currentState);
+                /*try {
+                    session.unpublish(publisher, function (error) {
+                        if (error)
+                            console.log('error unpulishing ', error.code, error.message);
+                    });
+                } catch (err) {
+                    console.log('There was an error unpublishing a session: ', err.code, err.message);
+                }
+                */
+                try {
+                    console.log('Pulishing stream...');
+                    session.publish(publisher, function (error) {
+                        if (error)
+                            console.log(error);
+                        else
+                            console.log('Pulished stream...');
+                    });
+                } catch (err) {
+                    console.log('There was an error publishing a session: ', err.code, err.message);
+                }
+                // Process the event.data property, if there is any data.
+            });
+
+            session.on('streamDestroyed', function (event) {
+                if (event.stream.connection.connectionId == session.connection.connectionId)
+                    return;
+                console.log('A stream is destroyed...');
+                try {
+                    request_publish();
+                } catch (err) {
+                    console.log('There was an error subs to the stream: ', err.code, err.message);
+                }
+            });
+
+            session.on('streamCreated', function (event) {
+                try {
+                    if (event.from.id == session.connection.connectionId)
+                        return;
+                    console.log('got stream to subscribe to....');
+                    subStream = event.stream;
+                    subscriber = session.subscribe(event.stream, 'subscriber', {
+                        insertMode: 'append',
+                        width: '500px',
+                        height: '350px'
+                    });
+                    /*if (subscriber != null) {
+                        subscriber.stream = event.stream;
+                    }
+                    else {
+                        subscriber = session.subscribe(event.stream, 'subscriber', {
+                            insertMode: 'append',
+                            width: '500px',
+                            height: '350px'
+                        });
+                    }*/
+                } catch (err) { }
+            });
+            console.log('Step 6');
+            session.on('sessionDisconnected', function (event) {
+                console.log('You were disconnected from the session.', event.reason);
+            });
+            console.log('Step 7');
+            // Connect to the session
+            session.connect(token, function (error) {
+                // If the connection is successful, initialize a publisher and publish to the session
+                console.log('Step 9');
+                if (!error) {
+                    try{
+                        session.publish(publisher);
+                    }
+                    catch (err) {
+                        console.log('There was an error connecting to the session: ', err.code, err.message);
+                    }
+                } else {
+                    console.log('There was an error connecting to the session: ', error.code, error.message);
+                }
+            });
+            console.log('Step 8');
+        }
+
+        connect_session();
+
+        var prevStats;
+        var intervalId = window.setInterval(function () {
+            if (endSession) {
+                window.clearInterval(intervalId);
+                return;
+            }
+            if (session.is('connecting'))
+                return;
+            if (subscriber == null) {
+                request_publish();
+                return;
+            }
+            subscriber.getStats(function (error, stats) {
+                if (error) {
+                    console.error('Error getting subscriber stats. ', error.message);
+                    //connect_session();
+                    return;
+                }
+                if (prevStats) {
+                    var videoPacketLossRatio = stats.video.packetsLost /
+                        (stats.video.packetsLost + stats.video.packetsReceived);
+                    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
+                    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
+                    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
+                    //if (videoBitRate < 10)
+                    //    connect_session();
+                    var audioPacketLossRatio = stats.audio.packetsLost /
+                        (stats.audio.packetsLost + stats.audio.packetsReceived);
+                }
+                prevStats = stats;
+            });
+        }, 20000);
+    </script>
+</body>
+</html>
