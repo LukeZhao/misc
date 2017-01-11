@@ -11,6 +11,7 @@ for /f "tokens=*" %%a in (
 ) do ( 
 set number=%%a
 )
+set /A number=number%20
 echo %number%
 set /A start_number=(number-1)*15 + 1
 set /A end_number=start_number+14

@@ -5,9 +5,9 @@
     <script src="https://static.opentok.com/v2/js/opentok.js" charset="utf-8"></script>
     <script charset="utf-8">
         var apiKey = '45139172';
-        var sessionId = '1_MX40NTEzOTE3Mn5-MTQ4MjM2MjkzNTQ1MH56UW43NUdoYXc0ZHZZOUY3cTU2VnJSV25-fg';
-        var token = 'T1==cGFydG5lcl9pZD00NTEzOTE3MiZzaWc9ODA2MWMwMjAyYjE3OTBiODQ0YzI3NjBiMGE5MjQxODdmODMxMzliMDpub25jZT04MDI5MDEmY3JlYXRlX3RpbWU9MTQ4MjM2MjkzNSZyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTFfTVg0ME5URXpPVEUzTW41LU1UUTRNak0yTWprek5UUTFNSDU2VVc0M05VZG9ZWGMwWkhaWk9VWTNjVFUyVm5KU1YyNS1mZw==';
-       var session = null;
+        var sessionId = '2_MX40NTEzOTE3Mn5-MTQ4NDE3MjY2NjkzOH5wNmZnZEZ1T1pneGVxY24zcjdvd2FyZkh-fg';
+        var token = 'T1==cGFydG5lcl9pZD00NTEzOTE3MiZzaWc9ZmJlNGQzYTJkYmM4MGQ5MmUzOWNlMzI0NWQ5ZTkxYmIyYzBkMzJkZDpub25jZT05MjE2MCZjcmVhdGVfdGltZT0xNDg0MTcyNjY2JnJvbGU9cHVibGlzaGVyJnNlc3Npb25faWQ9Ml9NWDQwTlRFek9URTNNbjUtTVRRNE5ERTNNalkyTmprek9INXdObVpuWkVaMVQxcG5lR1Z4WTI0emNqZHZkMkZ5WmtoLWZn';
+        var session = null;
         var publisher = OT.initPublisher('publisher', {
             insertMode: 'append',
             width: '250px',
@@ -58,7 +58,7 @@
                 found = true;
             });
             if (!found)
-                setTimeout(sub_stream, 3000);
+                setTimeout(sub_stream, 1000);
         }
 
         function request_publish()
@@ -80,24 +80,14 @@
                   }
               }
             );
-            setTimeout(sub_stream, 3000);
+            setTimeout(sub_stream, 1000);
         }
 
         function connect_session() {
             console.log('Step 1');
             if (endSession)
                 return;
-            //if (session != null)
-            //    console.log('Step 10: sessionstate: ', session.state);
-            //if (subscriber != null) {
-            //    subscriber.stream = null;
-            //}
             console.log('Step 2');
-            //try {
-            //    if (session != null)
-            //        session.unpublish(publisher);
-            //} catch (err) { }
-            console.log('Step 3');
             try {
                 //session.disconnect();
                 if (session != null)
@@ -116,15 +106,6 @@
                 if (event.from.id == session.connection.connectionId)
                     return;
                 console.log("Signal sent from connection for publish " + event.from.id + " session state: " + session.currentState);
-                /*try {
-                    session.unpublish(publisher, function (error) {
-                        if (error)
-                            console.log('error unpulishing ', error.code, error.message);
-                    });
-                } catch (err) {
-                    console.log('There was an error unpublishing a session: ', err.code, err.message);
-                }
-                */
                 try {
                     console.log('Pulishing stream...');
                     session.publish(publisher, function (error) {
@@ -213,7 +194,6 @@
             subscriber.getStats(function (error, stats) {
                 if (error) {
                     console.error('Error getting subscriber stats. ', error.message);
-                    //connect_session();
                     return;
                 }
                 if (prevStats) {
@@ -229,7 +209,7 @@
                 }
                 prevStats = stats;
             });
-        }, 20000);
+        }, 10000);
     </script>
 </body>
 </html>
