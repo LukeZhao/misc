@@ -1,6 +1,8 @@
 <!DOCTYPE HTML>
 <html>
 <body>
+    <button onclick="doPublish()">Publish</button><br />
+    <button onclick="dounPublish()">unPublish</button><br />
     <div id="id_status"></div><br />
     <script src="https://static.opentok.com/v2/js/opentok.js" charset="utf-8"></script>
     <script charset="utf-8">
@@ -16,6 +18,25 @@
         var subscriber = null;
         var subStream = null;
         var endSession = false;
+
+        function doPublish()
+        {
+            try{
+                session.publish(publisher);
+            }catch(err)
+            {
+                console.log("doPublish: ", err.code, err.message);
+            }
+        }
+
+        function dounPublish()
+        {
+            try {
+                session.unpublish(publisher);
+            } catch (err) {
+                console.log("dounPublish: ", err.code, err.message);
+            }
+        }
 
         var isInPubStream = false;
         function publish() {
@@ -67,12 +88,10 @@
             }
 
             session.connect(token, function (error) {
-                // If the connection is successful, initialize a publisher and publish to the session
-                console.log('Step 91');
                 if (!error) {
                     publish();
                 } else {
-                    console.log('Error connecting to the session: ', error.code, error.message);
+                    console.log('connect_again - error: ', error.code, error.message);
                 }
             });
         }
@@ -121,11 +140,9 @@
               },
               function (error) {
                   if (error) {
-                      console.log("signal error ("
-                                   + error.name
-                                   + "): " + error.message);
+                      console.log("signal send - error: ", error.name, error.message);
                   } else {
-                      console.log("signal sent.");
+                      console.log("signal send - success.");
                   }
               }
             );
@@ -167,10 +184,32 @@
                 // Process the event.data property, if there is any data.
             });
 
+            session.on("connectionCreated", function (event) {
+                if (event.connection.connectionId == session.connection.connectionId)
+                    console.log("event connectionCreated:  self = ", event.connection.connectionId);
+                else
+                    console.log("event connectionCreated:  other = ", event.connection.connectionId);
+            });
+
+            session.on("sessionConnected", function (event) {
+                if (event.connection.connectionId == session.connection.connectionId)
+                    console.log("event sessionConnected:  self = ", event.connection.connectionId);
+                else
+                    console.log("event sessionConnected:  other = ", event.connection.connectionId);
+            });
+
+            session.on("exception", function (event) {
+                console.log("event sessionConnected: ", event.code, event.title, event.message, event.target);
+            });
+
             session.on('streamDestroyed', function (event) {
                 if (event.stream.connection.connectionId == session.connection.connectionId)
+                    console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason);
+                else
+                    console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
+
+                if (event.stream.connection.connectionId == session.connection.connectionId)
                     return;
-                console.log('A stream is destroyed...');
                 try {
                     request_publish();
                 } catch (err) {}
@@ -186,9 +225,16 @@
             });
             console.log('Step 6');
             session.on('sessionDisconnected', function (event) {
+                console.log("event sessionDisconnected: ", event.reason);
                 session = null;
-                console.log('Disconnected from the session. Reason: ', event.reason);
             });
+            session.on('connectionDestroyed', function (event) {
+                if (event.connection.connectionId == session.connection.connectionId)
+                    console.log("event connectionDestroyed:  self = ", event.connection.connectionId, event.reason);
+                else
+                    console.log("event connectionDestroyed:  other = ", event.connection.connectionId, event.reason);
+            });
+
             console.log('Step 7');
             // Connect to the session
             session.connect(token, function (error) {
@@ -212,18 +258,24 @@
                 return;
             }
             if (session == null) {
+                console.log("Interval - session is null");
                 connect_session();
                 return;
             }
             if (session.is('connecting'))
+            {
+                console.log("Interval - session is connecting");
                 return;
+            }
+
             if (subscriber == null) {
+                console.log("Interval - subscriber is null");
                 request_publish();
                 return;
             }
             subscriber.getStats(function (error, stats) {
                 if (error) {
-                    console.error('Error getting subscriber stats. ', error.message);
+                    console.log("Interval - getStats error: ", error.message);
                     request_publish();
                     return;
                 }
