@@ -20,41 +20,90 @@
         var sessionId = '2_MX40NTEzOTE3Mn5-MTQ4NDE3MjY2NjkzOH5wNmZnZEZ1T1pneGVxY24zcjdvd2FyZkh-fg';
         var token = 'T1==cGFydG5lcl9pZD00NTEzOTE3MiZzaWc9MWJlMzZlNDY0YmM0ZDg0MmVkYjgwZTA0M2YyZGZhYzQ3Y2E0ODNkYzpub25jZT03NDA0NjMmY3JlYXRlX3RpbWU9MTQ4NDE3MjY2NiZyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTJfTVg0ME5URXpPVEUzTW41LU1UUTROREUzTWpZMk5qa3pPSDV3Tm1ablpFWjFUMXBuZUdWeFkyNHpjamR2ZDJGeVpraC1mZw==';
         var session = null;
+        var publisher = OT.initPublisher('publisher', {
+            insertMode: 'append',
+            width: '250px',
+            height: '150px'
+        });
+        var subscriber = null;
         var endSession = false;
+
+        var isInPubStream = false;
+        function publish() {
+            if (isInPubStream)
+                return;
+            isInPubStream = true;
+            var found = false;
+            session.streams.forEach(function (st) {
+                if (st.destroyed)
+                    return;
+                if (st.connection.connectionId != session.connection.connectionId || found)
+                    return;
+                found = true;
+            });
+            if (!found) {
+                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                if (x.length == 0) {
+                    publisher = OT.initPublisher('publisher', {
+                        insertMode: 'append',
+                        width: '250px',
+                        height: '150px'
+                    });
+                }
+                else {
+                    try {
+                        session.unpublish(publisher);
+                    }
+                    catch (err) { }
+                }
+                try {
+                    session.publish(publisher);
+                }
+                catch (err) {
+                    console.log('Error publishing: ', err.code, err.message);
+                }
+            }
+            isInPubStream = false;
+        }
 
         function connect_again()
         {
-            try {
-                //session.disconnect();
-                if (session != null)
-                    session.setState("disconnected");
-                console.log('step 92 state is: ', session.state);
-            } catch (err) {
-                console.log('There was an error setting session state: ', err.code, err.message);
+            if (session.isConnected())
+            {
+                publish();
+                return;
             }
+
             session.connect(token, function (error) {
                 // If the connection is successful, initialize a publisher and publish to the session
                 console.log('Step 91');
                 if (!error) {
-                    try {
-                        session.publish(publisher);
-                    }
-                    catch (err) {
-                        console.log('There was an error connecting to the session: ', err.code, err.message);
-                    }
+                    publish();
                 } else {
-                    console.log('There was an error connecting to the session: ', error.code, error.message);
+                    console.log('Error connecting to the session: ', error.code, error.message);
                 }
             });
         }
 
-        function sub_stream()
-        {
+        var isInSubStream = false;
+        function sub_stream() {
+            if (isInSubStream)
+                return;
+            isInSubStream = true;
             var found = false;
             session.streams.forEach(function (st) {
-                console.log('stream is: ', st);
+                if (st.destroyed)
+                    return;
                 if (st.connection.connectionId == session.connection.connectionId || found)
                     return;
+                if (subscriber != null) {
+                    x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+                    if (x.length > 0) {
+                        session.subscribe(st, subscriber);
+                        found = true;
+                        return;
+                    }
+                }
                 subscriber = session.subscribe(st, 'subscriber', {
                     insertMode: 'append',
                     width: '500px',
@@ -62,12 +111,15 @@
                 });
                 found = true;
             });
+            isInSubStream = false;
             if (!found)
                 setTimeout(sub_stream, 1000);
         }
 
         function request_publish()
         {
+            if (endSession)
+                return;
             session.signal(
               {
                   data: "hello",
@@ -78,47 +130,43 @@
                       console.log("signal error ("
                                    + error.name
                                    + "): " + error.message);
-                      if (error.name == "OT_NOT_CONNECTED")
-                          connect_session();
                   } else {
                       console.log("signal sent.");
                   }
               }
             );
-            setTimeout(sub_stream, 1000);
+            setTimeout(sub_stream, 2000);
         }
 
+        // Create a new session and connect to the sesssion id.
         function connect_session() {
-            console.log('Step 1');
             if (endSession)
                 return;
-            console.log('Step 2');
             try {
-                //session.disconnect();
                 if (session != null)
-                    session.setState("disconnected");
-                session = null;
+                {
+                    connect_again();
+                    return;
+                }
+
             } catch (err) { }
             console.log('Step 4');
             try {
                 session = OT.initSession(apiKey, sessionId);
             } catch (err) {
                 console.log('There was an error creating a session: ', err.code, err.message);
+                setTimeout(connect_session, 3000);
+                return;
             }
             console.log('Step 5');
 
             session.on("signal:publish", function (event) {
                 if (event.from.id == session.connection.connectionId)
                     return;
-                console.log("Signal sent from connection for publish " + event.from.id + " session state: " + session.currentState);
+                console.log("Signal for publish:  " + event.from.id + " session state: " + session.currentState);
                 try {
                     console.log('Pulishing stream...');
-                    session.publish(publisher, function (error) {
-                        if (error)
-                            console.log(error);
-                        else
-                            console.log('Pulished stream...');
-                    });
+                    publish();
                 } catch (err) {
                     console.log('There was an error publishing a session: ', err.code, err.message);
                 }
@@ -131,37 +179,21 @@
                 console.log('A stream is destroyed...');
                 try {
                     request_publish();
-                } catch (err) {
-                    console.log('There was an error subs to the stream: ', err.code, err.message);
-                }
+                } catch (err) {}
             });
 
             session.on('streamCreated', function (event) {
                 try {
-                    if (event.from.id == session.connection.connectionId)
+                    if (event.stream.connection.connectionId == session.connection.connectionId)
                         return;
                     console.log('got stream to subscribe to....');
-                    subStream = event.stream;
-                    subscriber = session.subscribe(event.stream, 'subscriber', {
-                        insertMode: 'append',
-                        width: '500px',
-                        height: '350px'
-                    });
-                    /*if (subscriber != null) {
-                        subscriber.stream = event.stream;
-                    }
-                    else {
-                        subscriber = session.subscribe(event.stream, 'subscriber', {
-                            insertMode: 'append',
-                            width: '500px',
-                            height: '350px'
-                        });
-                    }*/
+                    sub_stream();
                 } catch (err) { }
             });
             console.log('Step 6');
             session.on('sessionDisconnected', function (event) {
-                console.log('You were disconnected from the session.', event.reason);
+                session = null;
+                console.log('Disconnected from the session. Reason: ', event.reason);
             });
             console.log('Step 7');
             // Connect to the session
@@ -169,14 +201,9 @@
                 // If the connection is successful, initialize a publisher and publish to the session
                 console.log('Step 9');
                 if (!error) {
-                    try{
-                        session.publish(publisher);
-                    }
-                    catch (err) {
-                        console.log('There was an error connecting to the session: ', err.code, err.message);
-                    }
+                    publish();
                 } else {
-                    console.log('There was an error connecting to the session: ', error.code, error.message);
+                    console.log('Error connecting to the session: ', error.code, error.message);
                 }
             });
             console.log('Step 8');
@@ -190,6 +217,10 @@
                 window.clearInterval(intervalId);
                 return;
             }
+            if (session == null) {
+                connect_session();
+                return;
+            }
             if (session.is('connecting'))
                 return;
             if (subscriber == null) {
@@ -199,6 +230,7 @@
             subscriber.getStats(function (error, stats) {
                 if (error) {
                     console.error('Error getting subscriber stats. ', error.message);
+                    request_publish();
                     return;
                 }
                 if (prevStats) {
@@ -207,8 +239,6 @@
                     var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
                     var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
                     document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
-                    //if (videoBitRate < 10)
-                    //    connect_session();
                     var audioPacketLossRatio = stats.audio.packetsLost /
                         (stats.audio.packetsLost + stats.audio.packetsReceived);
                 }
@@ -218,4 +248,3 @@
     </script>
 </body>
 </html>
-
