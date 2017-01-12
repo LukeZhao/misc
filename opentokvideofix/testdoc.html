@@ -227,10 +227,13 @@
             });
 
             session.on('streamCreated', function (event) {
+                if (event.stream.connection.connectionId == session.connection.connectionId)
+                    console.log("event streamCreated:  self = ", event.stream.connection.connectionId, event.reason);
+                else
+                    console.log("event streamCreated:  other = ", event.stream.connection.connectionId, event.reason);
                 try {
                     if (event.stream.connection.connectionId == session.connection.connectionId)
                         return;
-                    console.log('got stream to subscribe to....');
                     sub_stream();
                 } catch (err) { }
             });
