@@ -125,6 +125,8 @@
                       function (error) {
                           if (error) {
                               console.log("signal send - error: ", error.name, error.message);
+                              if (error.name == "OT_NOT_CONNECTED")
+                                  connect_session();
                           } else {
                               console.log("signal send - success.");
                           }
