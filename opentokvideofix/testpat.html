@@ -126,26 +126,28 @@
             } catch (err) { }
             isInSubStream = false;
             if (!found)
-                setTimeout(sub_stream, 1000);
+            {
+                  session.signal(
+                      {
+                          data: "hello",
+                          type: "publish"
+                      },
+                      function (error) {
+                          if (error) {
+                              console.log("signal send - error: ", error.name, error.message);
+                          } else {
+                              console.log("signal send - success.");
+                          }
+                      }
+                 );
+                 setTimeout(sub_stream, 3000);
+            }
         }
 
         function request_publish()
         {
             if (endSession)
                 return;
-            session.signal(
-              {
-                  data: "hello",
-                  type: "publish"
-              },
-              function (error) {
-                  if (error) {
-                      console.log("signal send - error: ", error.name, error.message);
-                  } else {
-                      console.log("signal send - success.");
-                  }
-              }
-            );
             setTimeout(sub_stream, 2000);
         }
 
@@ -204,27 +206,25 @@
 
             session.on('streamDestroyed', function (event) {
                 if (event.stream.connection.connectionId == session.connection.connectionId)
+                {
                     console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason);
-                else
-                    console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
+                }
 
-                if (event.stream.connection.connectionId == session.connection.connectionId)
-                    return;
-                try {
-                    request_publish();
-                } catch (err) {}
+                else
+                {
+                    console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
+                }
             });
 
             session.on('streamCreated', function (event) {
                 if (event.stream.connection.connectionId == session.connection.connectionId)
+                {
                     console.log("event streamCreated:  self = ", event.stream.connection.connectionId, event.reason);
-                else
+                }
+                else {
                     console.log("event streamCreated:  other = ", event.stream.connection.connectionId, event.reason);
-                try {
-                    if (event.stream.connection.connectionId == session.connection.connectionId)
-                        return;
                     sub_stream();
-                } catch (err) { }
+                }
             });
             console.log('Step 6');
             session.on('sessionDisconnected', function (event) {
@@ -273,13 +273,13 @@
 
             if (subscriber == null) {
                 console.log("Interval - subscriber is null");
-                request_publish();
+                sub_stream();
                 return;
             }
             subscriber.getStats(function (error, stats) {
                 if (error) {
                     console.log("Interval - getStats error: ", error.message);
-                    request_publish();
+                    sub_stream();
                     return;
                 }
                 if (prevStats) {
