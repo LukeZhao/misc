@@ -52,17 +52,15 @@
                         height: '150px'
                     });
                 }
-                else {
-                    try {
-                        session.unpublish(publisher);
-                    }
-                    catch (err) { }
-                }
                 try {
                     session.publish(publisher);
                 }
                 catch (err) {
                     console.log('Error publishing: ', err.code, err.message);
+                    try {
+                        session.unpublish(publisher);
+                    }
+                    catch (err) { }
                 }
             } catch (err) { }
 
