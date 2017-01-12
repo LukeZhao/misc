@@ -40,39 +40,29 @@
 
         var isInPubStream = false;
         function publish() {
-            if (isInPubStream)
+            if (isInPubStream || endSession)
                 return;
             isInPubStream = true;
-            var found = false;
             try {
-                session.streams.forEach(function (st) {
-                    if (st.destroyed)
-                        return;
-                    if (st.connection.connectionId != session.connection.connectionId || found)
-                        return;
-                    found = true;
-                });
-                if (!found) {
-                    x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
-                    if (x.length == 0) {
-                        publisher = OT.initPublisher('publisher', {
-                            insertMode: 'append',
-                            width: '250px',
-                            height: '150px'
-                        });
-                    }
-                    else {
-                        try {
-                            session.unpublish(publisher);
-                        }
-                        catch (err) { }
-                    }
+                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                if (x.length == 0) {
+                    publisher = OT.initPublisher('publisher', {
+                        insertMode: 'append',
+                        width: '250px',
+                        height: '150px'
+                    });
+                }
+                else {
                     try {
-                        session.publish(publisher);
+                        session.unpublish(publisher);
                     }
-                    catch (err) {
-                        console.log('Error publishing: ', err.code, err.message);
-                    }
+                    catch (err) { }
+                }
+                try {
+                    session.publish(publisher);
+                }
+                catch (err) {
+                    console.log('Error publishing: ', err.code, err.message);
                 }
             } catch (err) { }
 
@@ -98,7 +88,7 @@
 
         var isInSubStream = false;
         function sub_stream() {
-            if (isInSubStream)
+            if (isInSubStream || endSession)
                 return;
             isInSubStream = true;
             var found = false;
@@ -142,13 +132,6 @@
                  );
                  setTimeout(sub_stream, 3000);
             }
-        }
-
-        function request_publish()
-        {
-            if (endSession)
-                return;
-            setTimeout(sub_stream, 2000);
         }
 
         // Create a new session and connect to the sesssion id.
@@ -205,11 +188,11 @@
             });
 
             session.on('streamDestroyed', function (event) {
+                event.preventDefault();
                 if (event.stream.connection.connectionId == session.connection.connectionId)
                 {
                     console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason);
                 }
-
                 else
                 {
                     console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
@@ -223,14 +206,14 @@
                 }
                 else {
                     console.log("event streamCreated:  other = ", event.stream.connection.connectionId, event.reason);
-                    sub_stream();
                 }
             });
-            console.log('Step 6');
+
             session.on('sessionDisconnected', function (event) {
                 console.log("event sessionDisconnected: ", event.reason);
                 session = null;
             });
+
             session.on('connectionDestroyed', function (event) {
                 if (event.connection.connectionId == session.connection.connectionId)
                     console.log("event connectionDestroyed:  self = ", event.connection.connectionId, event.reason);
@@ -254,7 +237,7 @@
 
         connect_session();
 
-        var prevStats;
+        //var prevStats;
         var intervalId = window.setInterval(function () {
             if (endSession) {
                 window.clearInterval(intervalId);
@@ -282,14 +265,14 @@
                     sub_stream();
                     return;
                 }
-                if (prevStats) {
-                    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
-                    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
-                    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
-                }
-                prevStats = stats;
+                //if (prevStats) {
+                //    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
+                //    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
+                //    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
+                //}
+                //prevStats = stats;
             });
-        }, 10000);
+        }, 2000);
     </script>
 </body>
 </html>
