@@ -34,35 +34,38 @@
                 return;
             isInPubStream = true;
             var found = false;
-            session.streams.forEach(function (st) {
-                if (st.destroyed)
-                    return;
-                if (st.connection.connectionId != session.connection.connectionId || found)
-                    return;
-                found = true;
-            });
-            if (!found) {
-                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
-                if (x.length == 0) {
-                    publisher = OT.initPublisher('publisher', {
-                        insertMode: 'append',
-                        width: '250px',
-                        height: '150px'
-                    });
-                }
-                else {
-                    try {
-                        session.unpublish(publisher);
+            try {
+                session.streams.forEach(function (st) {
+                    if (st.destroyed)
+                        return;
+                    if (st.connection.connectionId != session.connection.connectionId || found)
+                        return;
+                    found = true;
+                });
+                if (!found) {
+                    x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                    if (x.length == 0) {
+                        publisher = OT.initPublisher('publisher', {
+                            insertMode: 'append',
+                            width: '250px',
+                            height: '150px'
+                        });
                     }
-                    catch (err) { }
+                    else {
+                        try {
+                            session.unpublish(publisher);
+                        }
+                        catch (err) { }
+                    }
+                    try {
+                        session.publish(publisher);
+                    }
+                    catch (err) {
+                        console.log('Error publishing: ', err.code, err.message);
+                    }
                 }
-                try {
-                    session.publish(publisher);
-                }
-                catch (err) {
-                    console.log('Error publishing: ', err.code, err.message);
-                }
-            }
+            } catch (err) { }
+
             isInPubStream = false;
         }
 
@@ -91,26 +94,28 @@
                 return;
             isInSubStream = true;
             var found = false;
-            session.streams.forEach(function (st) {
-                if (st.destroyed)
-                    return;
-                if (st.connection.connectionId == session.connection.connectionId || found)
-                    return;
-                if (subscriber != null) {
-                    x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
-                    if (x.length > 0) {
-                        session.subscribe(st, subscriber);
-                        found = true;
+            try {
+                session.streams.forEach(function (st) {
+                    if (st.destroyed)
                         return;
+                    if (st.connection.connectionId == session.connection.connectionId || found)
+                        return;
+                    if (subscriber != null) {
+                        x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+                        if (x.length > 0) {
+                            session.subscribe(st, subscriber);
+                            found = true;
+                            return;
+                        }
                     }
-                }
-                subscriber = session.subscribe(st, 'subscriber', {
-                    insertMode: 'append',
-                    width: '500px',
-                    height: '350px'
+                    subscriber = session.subscribe(st, 'subscriber', {
+                        insertMode: 'append',
+                        width: '500px',
+                        height: '350px'
+                    });
+                    found = true;
                 });
-                found = true;
-            });
+            } catch (err) { }
             isInSubStream = false;
             if (!found)
                 setTimeout(sub_stream, 1000);
@@ -234,13 +239,9 @@
                     return;
                 }
                 if (prevStats) {
-                    var videoPacketLossRatio = stats.video.packetsLost /
-                        (stats.video.packetsLost + stats.video.packetsReceived);
                     var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
                     var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
                     document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
-                    var audioPacketLossRatio = stats.audio.packetsLost /
-                        (stats.audio.packetsLost + stats.audio.packetsReceived);
                 }
                 prevStats = stats;
             });
