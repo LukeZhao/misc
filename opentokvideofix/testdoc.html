@@ -1,26 +1,18 @@
 <!DOCTYPE HTML>
 <html>
 <body>
-    <button onclick="doPublish()">Publish</button><br />
-    <button onclick="dounPublish()">unPublish</button><br />
-    <div id="id_plugins"></div><br />
     <div id="id_status"></div><br />
     <script src="https://static.opentok.com/v2/js/opentok.js" charset="utf-8"></script>
+    <script src="/sinfo.js" charset="utf-8"></script>
     <script charset="utf-8">
-        var plugins = "";
-        for (var i = 0; i < navigator.plugins.length; i++)
-        {
-            plugins += navigator.plugins[i].name;
-            if (i != (navigator.plugins.length - 1))
-            {
-                plugins += ", ";
-            }
-        }
-        document.getElementById("id_plugins").innerHTML = "<p>".concat(plugins, "</p>");
+        var curPage = location.pathname.substring(location.pathname.lastIndexOf("/") + 1);
+        var sessionId = sinfo.video_id;
+        var token = null;
+        if (curPage == "test_pat.html")
+            token = sinfo.video_token_patient;
+        else
+            token = sinfo.video_token_clinician;
 
-        var apiKey = '45139172';
-        var sessionId = '1_MX40NTEzOTE3Mn5-MTQ4NDI3MTUyNjEzMH5FS29wcURaZkJWMkd3M2l2K1Q5bmNRWWh-fg';
-        var token = 'T1==cGFydG5lcl9pZD00NTEzOTE3MiZzaWc9MzRjYTYxOWE4YTJkZDI2OGM5OTk2YTBjOTE3MDU1YWUyZTQyMmI5NTpub25jZT0xMDYwNzAmY3JlYXRlX3RpbWU9MTQ4NDI3MTUyNiZyb2xlPXB1Ymxpc2hlciZzZXNzaW9uX2lkPTFfTVg0ME5URXpPVEUzTW41LU1UUTROREkzTVRVeU5qRXpNSDVGUzI5d2NVUmFaa0pXTWtkM00ybDJLMVE1Ym1OUldXaC1mZw==';
         var session = null;
         var publisher = OT.initPublisher('publisher', {
             insertMode: 'append',
@@ -30,87 +22,42 @@
         var subscriber = null;
         var endSession = false;
 
-        function doPublish()
-        {
-            try{
-                session.publish(publisher);
-            }catch(err)
-            {
-                console.log("doPublish: ", err.code, err.message);
-            }
-        }
-
-        function dounPublish()
-        {
+        function doPub() {
             try {
-                session.unpublish(publisher);
-            } catch (err) {
-                console.log("dounPublish: ", err.code, err.message);
-            }
-        }
-
-        var isInPubStream = false;
-        function publish() {
-            if (isInPubStream || endSession)
-                return;
-            isInPubStream = true;
-            try {
-                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                var x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
                 if (x.length == 0) {
+                    console.log("doPub: creating publisher.")
                     publisher = OT.initPublisher('publisher', {
                         insertMode: 'append',
                         width: '250px',
                         height: '150px'
                     });
                 }
-                try {
-                    session.publish(publisher);
-                }
-                catch (err) {
-                    try {
-                        session.unpublish(publisher);
-                    }
-                    catch (err) { }
-                    console.log('Error publishing: ', err.code, err.message);
-                }
-            } catch (err) { }
-
-            isInPubStream = false;
-        }
-
-        function connect_again()
-        {
-            if (session.isConnected())
-            {
-                publish();
-                return;
+                session.publish(publisher);
+                console.log("doPub: ok");
+            } catch (err) {
+                console.log("doPub: ", err.code, err.message);
             }
-
-            session.connect(token, function (error) {
-                if (!error) {
-                    publish();
-                } else {
-                    console.log('connect_again - error: ', error.code, error.message);
-                }
-            });
         }
 
-        var isInSubStream = false;
-        function sub_stream() {
-            if (isInSubStream || endSession)
-                return;
-            isInSubStream = true;
+        function doSub() {
             var found = false;
             try {
                 session.streams.forEach(function (st) {
-                    if (st.destroyed)
+                    console.log("doSub - stream = ", st);
+                    if (st.destroyed) {
+                        console.log("doSub - stream already destroyed");
                         return;
+                    }
+
                     if (st.connection.connectionId == session.connection.connectionId || found)
                         return;
                     if (subscriber != null) {
-                        x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+                        var x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
                         if (x.length > 0) {
                             session.subscribe(st, subscriber);
+                            sub_on(subscriber);
+                            console.log("doSub: ok existing");
                             found = true;
                             return;
                         }
@@ -120,64 +67,38 @@
                         width: '500px',
                         height: '350px'
                     });
+                    sub_on(subscriber);
+                    console.log("doSub: ok new");
                     found = true;
                 });
-            } catch (err) { }
-            isInSubStream = false;
-            if (!found)
-            {
-                  session.signal(
-                      {
-                          data: "hello",
-                          type: "publish"
-                      },
-                      function (error) {
-                          if (error) {
-                              console.log("signal send - error: ", error.name, error.message);
-                              if (error.name == "OT_NOT_CONNECTED")
-                                  connect_session();
-                          } else {
-                              console.log("signal send - success.");
-                          }
-                      }
-                 );
-                 setTimeout(sub_stream, 3000);
+            } catch (err) {
+                console.log("doSub: ", err.code, err.message);
+            }
+            if (!found) {
+                console.log("doSub - failed to find a stream");
             }
         }
 
         // Create a new session and connect to the sesssion id.
         function connect_session() {
-            if (endSession)
+            if (session != null && session.currentState == "connected") {
+                console.log("connect_session: session is already connected.");
                 return;
-            try {
-                if (session != null)
-                {
-                    connect_again();
-                    return;
-                }
+            }
 
-            } catch (err) { }
-            console.log('Step 4');
             try {
                 session = OT.initSession(apiKey, sessionId);
             } catch (err) {
-                console.log('There was an error creating a session: ', err.code, err.message);
-                setTimeout(connect_session, 3000);
+                console.log('Error creating a session: ', err.code, err.message);
                 return;
             }
-            console.log('Step 5');
 
             session.on("signal:publish", function (event) {
-                if (event.from.id == session.connection.connectionId)
-                    return;
-                console.log("Signal for publish:  " + event.from.id + " session state: " + session.currentState);
-                try {
-                    console.log('Pulishing stream...');
-                    publish();
-                } catch (err) {
-                    console.log('There was an error publishing a session: ', err.code, err.message);
-                }
-                // Process the event.data property, if there is any data.
+                console.log("Got signal for publish:  " + event.from.connectionId);
+                if (event.from.connectionId == session.connection.connectionId)
+                    console.log("event signal:publish:  self = ", event.from.connectionId);
+                else
+                    console.log("event signal:publish:  other = ", event.from.connectionId);
             });
 
             session.on("connectionCreated", function (event) {
@@ -188,10 +109,10 @@
             });
 
             session.on("sessionConnected", function (event) {
-                if (event.connection.connectionId == session.connection.connectionId)
-                    console.log("event sessionConnected:  self = ", event.connection.connectionId);
+                if (event.target.connection.connectionId == session.connection.connectionId)
+                    console.log("event sessionConnected:  self = ", event.target.connection.connectionId);
                 else
-                    console.log("event sessionConnected:  other = ", event.connection.connectionId);
+                    console.log("event sessionConnected:  other = ", event.target.connection.connectionId);
             });
 
             session.on("exception", function (event) {
@@ -199,20 +120,17 @@
             });
 
             session.on('streamDestroyed', function (event) {
-                event.preventDefault();
-                if (event.stream.connection.connectionId == session.connection.connectionId)
-                {
+                //event.preventDefault();
+                if (event.stream.connection.connectionId == session.connection.connectionId) {
                     console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason);
                 }
-                else
-                {
+                else {
                     console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
                 }
             });
 
             session.on('streamCreated', function (event) {
-                if (event.stream.connection.connectionId == session.connection.connectionId)
-                {
+                if (event.stream.connection.connectionId == session.connection.connectionId) {
                     console.log("event streamCreated:  self = ", event.stream.connection.connectionId, event.reason);
                 }
                 else {
@@ -222,7 +140,6 @@
 
             session.on('sessionDisconnected', function (event) {
                 console.log("event sessionDisconnected: ", event.reason);
-                session = null;
             });
 
             session.on('connectionDestroyed', function (event) {
@@ -232,18 +149,13 @@
                     console.log("event connectionDestroyed:  other = ", event.connection.connectionId, event.reason);
             });
 
-            console.log('Step 7');
-            // Connect to the session
             session.connect(token, function (error) {
-                // If the connection is successful, initialize a publisher and publish to the session
-                console.log('Step 9');
                 if (!error) {
-                    publish();
+                    console.log('Connected to the session: connectionId = ', session.connection.connectionId);
                 } else {
                     console.log('Error connecting to the session: ', error.code, error.message);
                 }
             });
-            console.log('Step 8');
         }
 
         connect_session();
@@ -254,28 +166,33 @@
                 window.clearInterval(intervalId);
                 return;
             }
-            if (session == null) {
-                console.log("Interval - session is null");
-                connect_session();
-                return;
-            }
-            if (session.is('connecting'))
+
+            if (session != null && session.currentState == "connecting")
             {
                 console.log("Interval - session is connecting");
                 return;
             }
 
-            if (subscriber == null) {
-                console.log("Interval - subscriber is null");
-                sub_stream();
+            if (session == null || session.currentState == "disconnected") {
+                connect_session();
                 return;
             }
+
+            var a = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+            if (a.length == 0 || publisher == null || publisher.session == null) {
+                doPub();
+                return;
+            }
+
+            x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+            if (x.length == 0 || subscriber == null || subscriber.stream == null) {
+                doSub();
+                return;
+            }
+
             subscriber.getStats(function (error, stats) {
-                if (error) {
-                    console.log("Interval - getStats error: ", error.message);
-                    sub_stream();
-                    return;
-                }
+                if (error)
+                    doSub();
                 //if (prevStats) {
                 //    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
                 //    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
@@ -283,7 +200,7 @@
                 //}
                 //prevStats = stats;
             });
-        }, 5000);
+        }, 2000);
     </script>
 </body>
 </html>

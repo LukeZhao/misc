@@ -31,7 +31,7 @@
         function doPublish()
         {
             try {
-                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                var x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
                 if (x.length == 0) {
                     console.log("doPublish: creating publisher.")
                     publisher = OT.initPublisher('publisher', {
@@ -86,7 +86,7 @@
                     if (st.connection.connectionId == session.connection.connectionId || found)
                         return;
                     if (subscriber != null) {
-                        x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+                        var x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
                         if (x.length > 0) {
                             session.subscribe(st, subscriber);
                             sub_on(subscriber);
