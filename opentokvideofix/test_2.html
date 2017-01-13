@@ -73,6 +73,7 @@
         }
 
         function doSub() {
+            var found = false;
             try {
                 session.streams.forEach(function (st) {
                     console.log("doSub - stream = ", st);
