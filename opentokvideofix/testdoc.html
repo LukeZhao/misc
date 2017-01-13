@@ -92,7 +92,7 @@
             }
 
             session.on("signal:publish", function (event) {
-                if (event.from.connectionId == session.connection.connectionId)
+                if (event.from.connection.connectionId == session.connection.connectionId)
                     return; //console.log("event signal:publish:  self = ", event.from.connectionId, (new Date()).toTimeString());
                 else
                 {
