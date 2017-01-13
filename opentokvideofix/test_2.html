@@ -33,6 +33,7 @@
             try {
                 x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
                 if (x.length == 0) {
+                    console.log("doPublish: creating publisher.")
                     publisher = OT.initPublisher('publisher', {
                         insertMode: 'append',
                         width: '250px',
@@ -115,35 +116,6 @@
             } catch (err) {
                 console.log("dounSub: ", err.code, err.message);
             }
-        }
-
-        var isInPubStream = false;
-        function publish() {
-            if (isInPubStream || endSession)
-                return;
-            isInPubStream = true;
-            try {
-                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
-                if (x.length == 0) {
-                    publisher = OT.initPublisher('publisher', {
-                        insertMode: 'append',
-                        width: '250px',
-                        height: '150px'
-                    });
-                }
-                try {
-                    session.publish(publisher);
-                }
-                catch (err) {
-                    console.log('Error publishing: ', err.code, err.message);
-                    try {
-                        session.unpublish(publisher);
-                    }
-                    catch (err) { }
-                }
-            } catch (err) { }
-
-            isInPubStream = false;
         }
 
         function disconnect_session() {
