@@ -2,6 +2,7 @@
 <html>
 <body>
     <div id="id_status"></div><br />
+    <div id="id_network"></div><br />
     <script src="https://static.opentok.com/v2/js/opentok.js" charset="utf-8"></script>
     <script src="/sinfo.js" charset="utf-8"></script>
     <script charset="utf-8">
@@ -207,10 +208,10 @@
             var cur = new Date();
             if (cur - lastSignal > 5000)
             {
-                document.getElementById("id_status").innerHTML = "<P>Network is having problems now.</P>";
+                document.getElementById("id_network").innerHTML = "<P>Network is having problems now.</P>";
             }
             else
-                document.getElementById("id_status").innerHTML = "";
+                document.getElementById("id_network").innerHTML = "<P>Network is ok</P>";
 
             if (endSession) {
                 window.clearInterval(intervalId);
