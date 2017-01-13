@@ -26,7 +26,7 @@
             try {
                 var x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
                 if (x.length == 0) {
-                    console.log("doPub: creating publisher.")
+                    console.log("doPub: creating publisher.", (new Date()).toTimeString());
                     publisher = OT.initPublisher('publisher', {
                         insertMode: 'append',
                         width: '250px',
@@ -34,9 +34,9 @@
                     });
                 }
                 session.publish(publisher);
-                console.log("doPub: ok");
+                console.log("doPub: ok", (new Date()).toTimeString());
             } catch (err) {
-                console.log("doPub: ", err.code, err.message);
+                console.log("doPub: ", err.code, err.message, (new Date()).toTimeString());
             }
         }
 
@@ -44,9 +44,8 @@
             var found = false;
             try {
                 session.streams.forEach(function (st) {
-                    console.log("doSub - stream = ", st);
                     if (st.destroyed) {
-                        console.log("doSub - stream already destroyed");
+                        console.log("doSub - stream already destroyed. ", (new Date()).toTimeString());
                         return;
                     }
 
@@ -56,7 +55,7 @@
                         var x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
                         if (x.length > 0) {
                             session.subscribe(st, subscriber);
-                            console.log("doSub: ok existing");
+                            console.log("doSub: ok existing ", (new Date()).toTimeString());
                             found = true;
                             return;
                         }
@@ -66,99 +65,99 @@
                         width: '500px',
                         height: '350px'
                     });
-                    console.log("doSub: ok new");
+                    console.log("doSub: ok new ", (new Date()).toTimeString());
                     found = true;
                 });
             } catch (err) {
-                console.log("doSub: ", err.code, err.message);
+                console.log("doSub: ", err.code, err.message, (new Date()).toTimeString());
             }
             if (!found) {
-                console.log("doSub - failed to find a stream");
+                console.log("doSub - failed to find a stream", (new Date()).toTimeString());
             }
         }
 
         // Create a new session and connect to the sesssion id.
         function connect_session() {
             if (session != null && session.currentState == "connected") {
-                console.log("connect_session: session is already connected.");
+                console.log("connect_session: session is already connected.", (new Date()).toTimeString());
                 return;
             }
 
             try {
                 session = OT.initSession(apiKey, sessionId);
             } catch (err) {
-                console.log('Error creating a session: ', err.code, err.message);
+                console.log('Error creating a session: ', err.code, err.message, (new Date()).toTimeString());
                 return;
             }
 
             session.on("signal:publish", function (event) {
-                console.log("Got signal for publish:  " + event.from.connectionId);
+                console.log("Got signal for publish:  " + event.from.connectionId, (new Date()).toTimeString());
                 if (event.from.connectionId == session.connection.connectionId)
-                    console.log("event signal:publish:  self = ", event.from.connectionId);
+                    console.log("event signal:publish:  self = ", event.from.connectionId, (new Date()).toTimeString());
                 else
-                    console.log("event signal:publish:  other = ", event.from.connectionId);
+                    console.log("event signal:publish:  other = ", event.from.connectionId, (new Date()).toTimeString());
             });
 
             session.on("connectionCreated", function (event) {
                 if (event.connection.connectionId == session.connection.connectionId)
-                    console.log("event connectionCreated:  self = ", event.connection.connectionId);
+                    console.log("event connectionCreated:  self = ", event.connection.connectionId, (new Date()).toTimeString());
                 else
-                    console.log("event connectionCreated:  other = ", event.connection.connectionId);
+                    console.log("event connectionCreated:  other = ", event.connection.connectionId, (new Date()).toTimeString());
             });
 
             session.on("sessionConnected", function (event) {
                 if (event.target.connection.connectionId == session.connection.connectionId)
-                    console.log("event sessionConnected:  self = ", event.target.connection.connectionId);
+                    console.log("event sessionConnected:  self = ", event.target.connection.connectionId, (new Date()).toTimeString());
                 else
-                    console.log("event sessionConnected:  other = ", event.target.connection.connectionId);
+                    console.log("event sessionConnected:  other = ", event.target.connection.connectionId, (new Date()).toTimeString());
             });
 
             session.on("exception", function (event) {
-                console.log("event sessionConnected: ", event.code, event.title, event.message, event.target);
+                console.log("event sessionConnected: ", event.code, event.title, event.message, event.target, (new Date()).toTimeString());
             });
 
             session.on('streamDestroyed', function (event) {
                 //event.preventDefault();
                 if (event.stream.connection.connectionId == session.connection.connectionId) {
-                    console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason);
+                    console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason, (new Date()).toTimeString());
                 }
                 else {
-                    console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
+                    console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason, (new Date()).toTimeString());
                 }
             });
 
             session.on('streamCreated', function (event) {
                 if (event.stream.connection.connectionId == session.connection.connectionId) {
-                    console.log("event streamCreated:  self = ", event.stream.connection.connectionId, event.reason);
+                    console.log("event streamCreated:  self = ", event.stream.connection.connectionId, event.reason, (new Date()).toTimeString());
                 }
                 else {
-                    console.log("event streamCreated:  other = ", event.stream.connection.connectionId, event.reason);
+                    console.log("event streamCreated:  other = ", event.stream.connection.connectionId, event.reason, (new Date()).toTimeString());
                 }
             });
 
             session.on('sessionDisconnected', function (event) {
-                console.log("event sessionDisconnected: ", event.reason);
+                console.log("event sessionDisconnected: ", event.reason, (new Date()).toTimeString());
             });
 
             session.on('connectionDestroyed', function (event) {
                 if (event.connection.connectionId == session.connection.connectionId)
-                    console.log("event connectionDestroyed:  self = ", event.connection.connectionId, event.reason);
+                    console.log("event connectionDestroyed:  self = ", event.connection.connectionId, event.reason, (new Date()).toTimeString());
                 else
-                    console.log("event connectionDestroyed:  other = ", event.connection.connectionId, event.reason);
+                    console.log("event connectionDestroyed:  other = ", event.connection.connectionId, event.reason, (new Date()).toTimeString());
             });
 
             session.connect(token, function (error) {
                 if (!error) {
-                    console.log('Connected to the session: connectionId = ', session.connection.connectionId);
+                    console.log('Connected to the session: connectionId = ', session.connection.connectionId, (new Date()).toTimeString());
                 } else {
-                    console.log('Error connecting to the session: ', error.code, error.message);
+                    console.log('Error connecting to the session: ', error.code, error.message, (new Date()).toTimeString());
                 }
             });
         }
 
         connect_session();
 
-        //var prevStats;
+        var prevStats;
         var intervalId = window.setInterval(function () {
             if (endSession) {
                 window.clearInterval(intervalId);
@@ -167,7 +166,7 @@
 
             if (session != null && session.currentState == "connecting")
             {
-                console.log("Interval - session is connecting");
+                console.log("Interval - session is connecting", (new Date()).toTimeString());
                 return;
             }
 
@@ -191,12 +190,12 @@
             subscriber.getStats(function (error, stats) {
                 if (error)
                     doSub();
-                //if (prevStats) {
-                //    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
-                //    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
-                //    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
-                //}
-                //prevStats = stats;
+                else if (prevStats) {
+                    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
+                    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
+                    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
+                }
+                prevStats = stats;
             });
         }, 2000);
     </script>
