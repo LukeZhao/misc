@@ -22,7 +22,7 @@
         var subscriber = null;
         var endSession = false;
 
-        function doPub() {
+         function doPub() {
             try {
                 var x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
                 if (x.length == 0) {
@@ -40,6 +40,44 @@
             }
         }
 
+        function sub_on(sub) {
+            subscriber.on('connected', function (event) {
+                console.log("subscriber event - connected");
+            });
+
+            subscriber.on('destroyed', function (event) {
+                console.log("subscriber event - destroyed");
+            });
+
+            subscriber.on('disconnected', function (event) {
+                console.log("subscriber event - disconnected");
+            });
+
+            subscriber.on('videoDimensionsChanged', function (event) {
+                console.log("subscriber event - videoDimensionsChanged");
+            });
+
+            subscriber.on('videoDisabled', function (event) {
+                console.log("subscriber event - videoDisabled");
+            });
+
+            subscriber.on('videoDisableWarning', function (event) {
+                console.log("subscriber event - videoDisableWarning");
+            });
+
+            subscriber.on('videoDisableWarningLifted', function (event) {
+                console.log("subscriber event - videoDisableWarningLifted");
+            });
+
+            subscriber.on('videoElementCreated', function (event) {
+                console.log("subscriber event - videoElementCreated");
+            });
+
+            subscriber.on('videoEnabled', function (event) {
+                console.log("subscriber event - videoEnabled");
+            });
+        }
+
         function doSub() {
             var found = false;
             try {
@@ -55,6 +93,7 @@
                         var x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
                         if (x.length > 0) {
                             session.subscribe(st, subscriber);
+                            sub_on(subscriber);
                             console.log("doSub: ok existing ", (new Date()).toTimeString());
                             found = true;
                             return;
@@ -65,6 +104,7 @@
                         width: '500px',
                         height: '350px'
                     });
+                    sub_on(subscriber);
                     console.log("doSub: ok new ", (new Date()).toTimeString());
                     found = true;
                 });
