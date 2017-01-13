@@ -209,7 +209,7 @@
             try{
                 session.disconnect();
                 console.log("disconnect_session: ok");
-                console.log("session = ", session);
+                console.log("disconnect_session session = ", session);
             } catch(err)
             {
                 console.log("disconnect_session: ", err.code, err.message);
@@ -241,10 +241,10 @@
             });
 
             session.on("sessionConnected", function (event) {
-                if (event.connection.connectionId == session.connection.connectionId)
-                    console.log("event sessionConnected:  self = ", event.connection.connectionId);
+                if (event.target.connection.connectionId == session.connection.connectionId)
+                    console.log("event sessionConnected:  self = ", event.target.connection.connectionId);
                 else
-                    console.log("event sessionConnected:  other = ", event.connection.connectionId);
+                    console.log("event sessionConnected:  other = ", event.target.connection.connectionId);
             });
 
             session.on("exception", function (event) {
@@ -286,7 +286,7 @@
 
             session.connect(token, function (error) {
                 if (!error) {
-                    console.log('Connected to the session: connectionId = ', session.connectionId);
+                    console.log('Connected to the session: connectionId = ', session.connection.connectionId);
                 } else {
                     console.log('Error connecting to the session: ', error.code, error.message);
                 }
