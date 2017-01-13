@@ -30,7 +30,15 @@
 
         function doPublish()
         {
-            try{
+            try {
+                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                if (x.length == 0) {
+                    publisher = OT.initPublisher('publisher', {
+                        insertMode: 'append',
+                        width: '250px',
+                        height: '150px'
+                    });
+                }
                 session.publish(publisher);
                 console.log("doPublish: ok");
             }catch(err)
@@ -138,78 +146,15 @@
             isInPubStream = false;
         }
 
-        function connect_again()
-        {
-            if (session.isConnected())
-            {
-                publish();
-                return;
-            }
-
-            session.connect(token, function (error) {
-                if (!error) {
-                    publish();
-                } else {
-                    console.log('connect_again - error: ', error.code, error.message);
-                }
-            });
-        }
-
-        var isInSubStream = false;
-        function sub_stream() {
-            if (isInSubStream || endSession)
-                return;
-            isInSubStream = true;
-            var found = false;
-            try {
-                session.streams.forEach(function (st) {
-                    if (st.destroyed)
-                        return;
-                    if (st.connection.connectionId == session.connection.connectionId || found)
-                        return;
-                    if (subscriber != null) {
-                        x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
-                        if (x.length > 0) {
-                            session.subscribe(st, subscriber);
-                            found = true;
-                            return;
-                        }
-                    }
-                    subscriber = session.subscribe(st, 'subscriber', {
-                        insertMode: 'append',
-                        width: '500px',
-                        height: '350px'
-                    });
-                    found = true;
-                });
-            } catch (err) { }
-            if (!found)
-            {
-                  session.signal(
-                      {
-                          data: "hello",
-                          type: "publish"
-                      },
-                      function (error) {
-                          if (error) {
-                              console.log("signal send - error: ", error.name, error.message);
-                              if (error.name == "OT_NOT_CONNECTED")
-                                  connect_session();
-                          } else {
-                              console.log("signal send - success.");
-                          }
-                      }
-                 );
-                 setTimeout(sub_stream, 3000);
-            }
-            isInSubStream = false;
-        }
-
         function disconnect_session() {
-            try{
-                session.disconnect();
-                console.log("disconnect_session: ok");
-                console.log("disconnect_session session = ", session);
+            try {
+                if (session.currentState == "disconnected")
+                    console.log("disconnect_session: session is already disconnected.");
+                else {
+                    session.disconnect();
+                    console.log("disconnect_session: ok");
+                    console.log("disconnect_session session = ", session);
+                }
             } catch(err)
             {
                 console.log("disconnect_session: ", err.code, err.message);
@@ -218,6 +163,12 @@
 
         // Create a new session and connect to the sesssion id.
         function connect_session() {
+            if (session != null && session.currentState == "connected")
+            {
+                console.log("connect_session: session is already connected.");
+                return;
+            }
+
             try {
                 session = OT.initSession(apiKey, sessionId);
             } catch (err) {
