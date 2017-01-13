@@ -78,6 +78,7 @@
         }
 
         // Create a new session and connect to the sesssion id.
+        var lastSignal = (new Date());
         function connect_session() {
             if (session != null && session.currentState == "connected") {
                 console.log("connect_session: session is already connected.", (new Date()).toTimeString());
@@ -92,11 +93,14 @@
             }
 
             session.on("signal:publish", function (event) {
-                console.log("Got signal for publish:  " + event.from.connectionId, (new Date()).toTimeString());
                 if (event.from.connectionId == session.connection.connectionId)
-                    console.log("event signal:publish:  self = ", event.from.connectionId, (new Date()).toTimeString());
+                    return; //console.log("event signal:publish:  self = ", event.from.connectionId, (new Date()).toTimeString());
                 else
-                    console.log("event signal:publish:  other = ", event.from.connectionId, (new Date()).toTimeString());
+                {
+                    lastSignal = (new Date());
+                    //console.log("event signal:publish:  other = ", event.from.connectionId, (new Date()).toTimeString());
+                }
+
             });
 
             session.on("connectionCreated", function (event) {
@@ -160,6 +164,11 @@
 
         var prevStats;
         var intervalId = window.setInterval(function () {
+            var cur = new Date();
+            if (cur - lastSignal > 5)
+            {
+                document.getElementById("id_status").innerHTML = "<P>Network is having problems now.</P>";
+            }
             if (endSession) {
                 window.clearInterval(intervalId);
                 return;
@@ -175,6 +184,16 @@
                 connect_session();
                 return;
             }
+
+            session.signal(
+                {
+                    data: "hello",
+                    type: "publish"
+                },
+                function (error) {
+
+                });
+
 
             var a = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
             if (a.length == 0 || publisher == null || publisher.session == null) {
