@@ -114,10 +114,6 @@
 
         function sub_on(sub)
         {
-            subscriber.on('audioLevelUpdated', function (event) {
-                console.log("subscriber event - audioLevelUpdated");
-            });
-
             subscriber.on('connected', function (event) {
                 console.log("subscriber event - connected");
             });
