@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+    <button onclick="doPublish()">Publish</button><br />
+    <button onclick="dounPublish()">unPublish</button><br />
+    <button onclick="createPublisher()">create publisher</button><br />
+    <button onclick="connect_session()">connection sesssion</button><br />
+    <button onclick="disconnect_session()">dis-connection sesssion</button><br />
+    <button onclick="doSub()">Subscribe</button><br />
+    <button onclick="dounSub()">unSubscribe</button><br />
+    <div id="id_status"></div><br />
+    <script src="https://static.opentok.com/v2/js/opentok.js" charset="utf-8"></script>
+    <script src="/sinfo.js" charset="utf-8"></script>
+    <script charset="utf-8">
+        var curPage = location.pathname.substring(location.pathname.lastIndexOf("/") + 1);
+        var sessionId = sinfo.video_id;
+        var token = null;
+        if (curPage == "test_1.html")
+            token = sinfo.video_token_patient;
+        else
+            token = sinfo.video_token_clinician;
+        var session = null;
+        var publisher = OT.initPublisher('publisher', {
+            insertMode: 'append',
+            width: '250px',
+            height: '150px'
+        });
+        var subscriber = null;
+        var endSession = false;
+
+        function doPublish()
+        {
+            try{
+                session.publish(publisher);
+                console.log("doPublish: ok");
+            }catch(err)
+            {
+                console.log("doPublish: ", err.code, err.message);
+            }
+        }
+
+        function dounPublish()
+        {
+            try {
+                session.unpublish(publisher);
+                console.log("dounPublish: ok");
+            } catch (err) {
+                console.log("dounPublish: ", err.code, err.message);
+            }
+        }
+
+        function createPublisher() {
+            try{
+                publisher = OT.initPublisher('publisher', {
+                    insertMode: 'append',
+                    width: '250px',
+                    height: '150px'
+                });
+                console.log("createPublisher: success");
+            } catch(err)
+            {
+                console.log("createPublisher: failed: ", err.code, err.message);
+            }
+        }
+
+        function doSub() {
+            try {
+                session.streams.forEach(function (st) {
+                    console.log("doSub - stream = ", st);
+                    if (st.destroyed)
+                    {
+                        console.log("doSub - stream already destroyed");
+                        return;
+                    }
+
+                    if (st.connection.connectionId == session.connection.connectionId || found)
+                        return;
+                    if (subscriber != null) {
+                        x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+                        if (x.length > 0) {
+                            session.subscribe(st, subscriber);
+                            console.log("doSub: ok existing");
+                            found = true;
+                            return;
+                        }
+                    }
+                    subscriber = session.subscribe(st, 'subscriber', {
+                        insertMode: 'append',
+                        width: '500px',
+                        height: '350px'
+                    });
+                    console.log("doSub: ok new");
+                    found = true;
+                });
+            } catch (err) {
+                console.log("doSub: ", err.code, err.message);
+            }
+            if (!found) {
+                console.log("doSub - failed to find a stream");
+            }
+        }
+
+        function dounSub() {
+            try {
+                session.unsubscribe(subscriber);
+                console.log("dounSub: ok");
+            } catch (err) {
+                console.log("dounSub: ", err.code, err.message);
+            }
+        }
+
+        var isInPubStream = false;
+        function publish() {
+            if (isInPubStream || endSession)
+                return;
+            isInPubStream = true;
+            try {
+                x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
+                if (x.length == 0) {
+                    publisher = OT.initPublisher('publisher', {
+                        insertMode: 'append',
+                        width: '250px',
+                        height: '150px'
+                    });
+                }
+                try {
+                    session.publish(publisher);
+                }
+                catch (err) {
+                    console.log('Error publishing: ', err.code, err.message);
+                    try {
+                        session.unpublish(publisher);
+                    }
+                    catch (err) { }
+                }
+            } catch (err) { }
+
+            isInPubStream = false;
+        }
+
+        function connect_again()
+        {
+            if (session.isConnected())
+            {
+                publish();
+                return;
+            }
+
+            session.connect(token, function (error) {
+                if (!error) {
+                    publish();
+                } else {
+                    console.log('connect_again - error: ', error.code, error.message);
+                }
+            });
+        }
+
+        var isInSubStream = false;
+        function sub_stream() {
+            if (isInSubStream || endSession)
+                return;
+            isInSubStream = true;
+            var found = false;
+            try {
+                session.streams.forEach(function (st) {
+                    if (st.destroyed)
+                        return;
+                    if (st.connection.connectionId == session.connection.connectionId || found)
+                        return;
+                    if (subscriber != null) {
+                        x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
+                        if (x.length > 0) {
+                            session.subscribe(st, subscriber);
+                            found = true;
+                            return;
+                        }
+                    }
+                    subscriber = session.subscribe(st, 'subscriber', {
+                        insertMode: 'append',
+                        width: '500px',
+                        height: '350px'
+                    });
+                    found = true;
+                });
+            } catch (err) { }
+            if (!found)
+            {
+                  session.signal(
+                      {
+                          data: "hello",
+                          type: "publish"
+                      },
+                      function (error) {
+                          if (error) {
+                              console.log("signal send - error: ", error.name, error.message);
+                              if (error.name == "OT_NOT_CONNECTED")
+                                  connect_session();
+                          } else {
+                              console.log("signal send - success.");
+                          }
+                      }
+                 );
+                 setTimeout(sub_stream, 3000);
+            }
+            isInSubStream = false;
+        }
+
+        function disconnect_session() {
+            try{
+                session.disconnect();
+                console.log("disconnect_session: ok");
+                console.log("session = ", session);
+            } catch(err)
+            {
+                console.log("disconnect_session: ", err.code, err.message);
+            }
+        }
+
+        // Create a new session and connect to the sesssion id.
+        function connect_session() {
+            try {
+                session = OT.initSession(apiKey, sessionId);
+            } catch (err) {
+                console.log('Error creating a session: ', err.code, err.message);
+                return;
+            }
+
+            session.on("signal:publish", function (event) {
+                console.log("Got signal for publish:  " + event.from.connectionId);
+                if (event.from.connectionId == session.connection.connectionId)
+                    console.log("event signal:publish:  self = ", event.from.connectionId);
+                else
+                    console.log("event signal:publish:  other = ", event.from.connectionId);
+            });
+
+            session.on("connectionCreated", function (event) {
+                if (event.connection.connectionId == session.connection.connectionId)
+                    console.log("event connectionCreated:  self = ", event.connection.connectionId);
+                else
+                    console.log("event connectionCreated:  other = ", event.connection.connectionId);
+            });
+
+            session.on("sessionConnected", function (event) {
+                if (event.connection.connectionId == session.connection.connectionId)
+                    console.log("event sessionConnected:  self = ", event.connection.connectionId);
+                else
+                    console.log("event sessionConnected:  other = ", event.connection.connectionId);
+            });
+
+            session.on("exception", function (event) {
+                console.log("event sessionConnected: ", event.code, event.title, event.message, event.target);
+            });
+
+            session.on('streamDestroyed', function (event) {
+                //event.preventDefault();
+                if (event.stream.connection.connectionId == session.connection.connectionId)
+                {
+                    console.log("event streamDestroyed:  self = ", event.stream.connection.connectionId, event.reason);
+                }
+                else
+                {
+                    console.log("event streamDestroyed:  other = ", event.stream.connection.connectionId, event.reason);
+                }
+            });
+
+            session.on('streamCreated', function (event) {
+                if (event.stream.connection.connectionId == session.connection.connectionId)
+                {
+                    console.log("event streamCreated:  self = ", event.stream.connection.connectionId, event.reason);
+                }
+                else {
+                    console.log("event streamCreated:  other = ", event.stream.connection.connectionId, event.reason);
+                }
+            });
+
+            session.on('sessionDisconnected', function (event) {
+                console.log("event sessionDisconnected: ", event.reason);
+            });
+
+            session.on('connectionDestroyed', function (event) {
+                if (event.connection.connectionId == session.connection.connectionId)
+                    console.log("event connectionDestroyed:  self = ", event.connection.connectionId, event.reason);
+                else
+                    console.log("event connectionDestroyed:  other = ", event.connection.connectionId, event.reason);
+            });
+
+            session.connect(token, function (error) {
+                if (!error) {
+                    console.log('Connected to the session: connectionId = ', session.connectionId);
+                } else {
+                    console.log('Error connecting to the session: ', error.code, error.message);
+                }
+            });
+        }
+
+        connect_session();
+
+        //var prevStats;
+        var intervalId = window.setInterval(function () {
+            if (endSession) {
+                window.clearInterval(intervalId);
+                return;
+            }
+            if (session == null) {
+                console.log("Interval - session is null");
+                connect_session();
+                return;
+            }
+            if (session.is('connecting'))
+            {
+                console.log("Interval - session is connecting");
+                return;
+            }
+
+            if (subscriber == null) {
+                console.log("Interval - subscriber is null");
+                sub_stream();
+                return;
+            }
+            subscriber.getStats(function (error, stats) {
+                if (error) {
+                    console.log("Interval - getStats error: ", error.message);
+                    sub_stream();
+                    return;
+                }
+                //if (prevStats) {
+                //    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
+                //    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
+                //    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
+                //}
+                //prevStats = stats;
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
