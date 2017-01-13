@@ -56,7 +56,6 @@
                         var x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
                         if (x.length > 0) {
                             session.subscribe(st, subscriber);
-                            sub_on(subscriber);
                             console.log("doSub: ok existing");
                             found = true;
                             return;
@@ -67,7 +66,6 @@
                         width: '500px',
                         height: '350px'
                     });
-                    sub_on(subscriber);
                     console.log("doSub: ok new");
                     found = true;
                 });
