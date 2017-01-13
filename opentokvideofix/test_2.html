@@ -297,39 +297,10 @@
 
         //var prevStats;
         var intervalId = window.setInterval(function () {
-            if (endSession) {
-                window.clearInterval(intervalId);
-                return;
-            }
             if (session == null) {
                 console.log("Interval - session is null");
-                connect_session();
                 return;
             }
-            if (session.is('connecting'))
-            {
-                console.log("Interval - session is connecting");
-                return;
-            }
-
-            if (subscriber == null) {
-                console.log("Interval - subscriber is null");
-                sub_stream();
-                return;
-            }
-            subscriber.getStats(function (error, stats) {
-                if (error) {
-                    console.log("Interval - getStats error: ", error.message);
-                    sub_stream();
-                    return;
-                }
-                //if (prevStats) {
-                //    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
-                //    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
-                //    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
-                //}
-                //prevStats = stats;
-            });
         }, 5000);
     </script>
 </body>
