@@ -169,6 +169,8 @@
             {
                 document.getElementById("id_status").innerHTML = "<P>Network is having problems now.</P>";
             }
+            else
+                document.getElementById("id_status").innerHTML = "";
             if (endSession) {
                 window.clearInterval(intervalId);
                 return;
