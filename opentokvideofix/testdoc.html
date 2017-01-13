@@ -22,7 +22,7 @@
         var subscriber = null;
         var endSession = false;
 
-         function doPub() {
+        function doPub() {
             try {
                 var x = document.getElementsByClassName("OT_mirrored OT_root OT_publisher OT_fit-mode-cover");
                 if (x.length == 0) {
@@ -92,7 +92,7 @@
             }
 
             session.on("signal:publish", function (event) {
-                if (event.from.connection.connectionId == session.connection.connectionId)
+                if (event.from.connectionId == session.connection.connectionId)
                     return; //console.log("event signal:publish:  self = ", event.from.connectionId, (new Date()).toTimeString());
                 else
                 {
@@ -212,7 +212,7 @@
             subscriber.getStats(function (error, stats) {
                 if (error)
                     doSub();
-                else if (prevStats) {
+                else if (prevStats && (typeof stats.video !== 'undefined')) {
                     var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
                     var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
                     document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
