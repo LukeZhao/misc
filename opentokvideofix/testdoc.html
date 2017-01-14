@@ -114,6 +114,8 @@
                 });
             } catch (err) {
                 console.log("doSub: ", err.code, err.message, (new Date()).toTimeString());
+                if (err.code == 12)
+                    session.unsubscribe(subscriber);
             }
             if (!found) {
                 console.log("doSub - failed to find a stream", (new Date()).toTimeString());
