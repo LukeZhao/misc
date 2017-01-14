@@ -262,7 +262,7 @@
                 else if (prevStats && (typeof stats.video !== 'undefined')) {
                     var videoBitRate = 2 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
                     var audioBitRate = 2 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
-                    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
+                    document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), ", Frame/s: ", stats.video.frameRate, "</P>");
                 }
                 prevStats = stats;
             });
