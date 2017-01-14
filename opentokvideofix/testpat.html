@@ -209,9 +209,11 @@
         var prevStats;
         var intervalId = window.setInterval(function () {
             var cur = new Date();
+            var connected = true;
             if (cur - lastSignal > 5000)
             {
                 document.getElementById("id_network").innerHTML = "<P>Network is having problems now.</P>";
+                connected = false;
             }
             else
                 document.getElementById("id_network").innerHTML = "<P>Network is ok</P>";
@@ -250,7 +252,8 @@
 
             x = document.getElementsByClassName("OT_root OT_subscriber OT_fit-mode-cover");
             if (x.length == 0 || subscriber == null || subscriber.stream == null) {
-                doSub();
+                if (connected)
+                    doSub();
                 return;
             }
 
@@ -258,8 +261,8 @@
                 if (error)
                     doSub();
                 else if (prevStats && (typeof stats.video !== 'undefined')) {
-                    var videoBitRate = 8 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
-                    var audioBitRate = 8 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
+                    var videoBitRate = 2 * (stats.video.bytesReceived - prevStats.video.bytesReceived);
+                    var audioBitRate = 2 * (stats.audio.bytesReceived - prevStats.audio.bytesReceived);
                     document.getElementById("id_status").innerHTML = "<P>Video: ".concat(videoBitRate.toString(), ", Audio: ", audioBitRate.toString(), "</P>");
                 }
                 prevStats = stats;
