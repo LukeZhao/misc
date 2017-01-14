@@ -60,7 +60,9 @@
 
             subscriber.on('videoDisabled', function (event) {
                 console.log("subscriber event - videoDisabled");
-                subscriber.ena
+                try {
+                    subscriber.subscribeToVideo()
+                } catch (err) { }
             });
 
             subscriber.on('videoDisableWarning', function (event) {
