@@ -14,8 +14,10 @@ aconfig = active_config()
 app = None
 cur_server_ver = None
 
-re_err = re.compile('(Feb.{10,40}?) api.{1,300}?ultations/(\w{24}).{1,5}?PUT(.{1,900}?)clinician": "(\w{24})".{1,1200}?opentok session', re.DOTALL)
-re_cust = re.compile('consult\.(\w*?)\.', re.DOTALL)
+#re_err = re.compile('(Feb.{10,40}?) api.{1,300}?ultations/(\w{24}).{1,5}?PUT(.{1,900}?)clinician": "(\w{24})".{1,1200}?opentok session', re.DOTALL)
+re_err = re.compile('(Feb.{10,40}?) api.{1,300}?ultations/(\w{24}).{1,5}?PUT(.{1,900}?)"([^"]*)", "clinician": "(\w{24})"(.{1,1200}?)"Validation error"', re.DOTALL)
+re_cust = re.compile('X-Api-Key: (\w+)', re.DOTALL)
+re_reason = re.compile('"description": "([^"]*)"', re.DOTALL)
 
 def main(args=None):
 
@@ -30,7 +32,11 @@ def main(args=None):
             customer = 'not found'
             if cu_match:
                 customer = cu_match.groups()[0]
-            print a[0], 'consult:{}'.format(a[1]), 'doc: {}'.format(a[3]), customer
+            reason = 'none'
+            rea_match = re_reason.search(a[5])
+            if rea_match:
+                reason = rea_match.groups()[0]
+            print ('{}\t{}\t{}\t{}\t{}\t"{}"'.format(a[0], a[1], a[4], a[3], customer, reason))
 
 if __name__ == '__main__':
      main()
