@@ -2,29 +2,20 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from main import create_app
 # pip install cairosvg==1.0.14
 # pip install wkhtmltopdf //wkhtmltopdf-0.2
-import arrow
-import json
-import math
-from collections import OrderedDict, defaultdict
-from connections import current_customer, get_logo_url
+from connections import switch_customer, current_customer, get_logo_url
 from weasyprint import HTML, CSS
 import pdfkit
-
 from flask import render_template
-
-from models import DCI
-from settings import live_config, get_logger
+from settings import get_logger
 
 log = get_logger('tasks')
 
-
 app = create_app(schedule_events=False)
 app.app_context().push()
-
+switch_customer('tcs')
 
 def create_admin_report(locale, header, result, title):
     template = '{}/{}/admin_report.html'.format(current_customer, locale)
