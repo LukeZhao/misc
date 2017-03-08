@@ -43,9 +43,12 @@ def create_admin_report_pdfkit(locale, header, result, title):
                                   'result': result,
                                   'title': title})
     css = 'templates/{}/{}/admin_report.css'.format(current_customer, locale)
-
+    r = pdfkit.PDFKit(html_str, 'string', css=css)
     output = '/home/lzhao/pdfkit_admin_login_report.pdf'
-    pdfkit.from_string(html_str, output, css=css)
+    oo = r.to_pdf()
+    f = open(output, 'w')
+    f.write(oo)
+    f.close()
 
 
 def main():
