@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+import shutil
+import sys
+import os
+try:
+    # drop tcs_db
+    os.system('sdown')
+    os.system('mongo tcs_db --ssl --sslAllowInvalidCertificates --eval "db.dropDatabase()"')
+    
+    # restore db
+    os.system('mongorestore --ssl --sslAllowInvalidCertificates --drop --db tcs_db /home/mrenukaj/mongDmpAutoTestData_server_3.6.3-7/tcs_db')
+    os.system('sup')
+except Exception as ee:
+    os.system('sup')
+    print (ee)
+
+

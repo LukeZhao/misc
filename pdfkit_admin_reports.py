@@ -42,6 +42,9 @@ def create_admin_report_pdfkit(locale, header, result, title):
                                   'header': header,
                                   'result': result,
                                   'title': title})
+    #pdfkit.from_url('http://google.com', 'out.pdf')
+    #pdfkit.from_file('test.html', 'out.pdf')
+    #pdfkit.from_string('Hello!', 'out.pdf')
     css = 'templates/{}/{}/admin_report.css'.format(current_customer, locale)
     r = pdfkit.PDFKit(html_str, 'string', css=css)
     output = '/home/lzhao/pdfkit_admin_login_report.pdf'
