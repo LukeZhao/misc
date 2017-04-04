@@ -16,10 +16,10 @@ app = create_app(schedule_events=False)
 app.app_context().push()
 aconfig = active_config()
 
-def get_stat(cust):
+def get_stat(cust, tt):
     switch_customer(cust)
     dev = {}
-    for c in AuditLog.objects(method='Login'):
+    for c in AuditLog.objects(method='Login', time__gt=tt):
         d = c.arguments.get('device', None)
         v = c.arguments.get('version', None)
         if not v:
@@ -43,8 +43,20 @@ def get_stat(cust):
 
 if __name__ == '__main__':
 
+    tt = arrow.get().replace(days=-365).naive
     for cust in aconfig['CUSTOMERS']:
-        stats = get_stat(cust)
+        stats = get_stat(cust, tt)
+        print('customer: {}'.format(cust))
+        for k in stats.keys():
+            print('  platform: {}'.format(k))
+            vers = stats.get(k)
+            vk = sorted(vers.keys())
+            for v in vk:
+                print ('    {}\t{}'.format(v, vers.get(v)))
+
+    tt = arrow.get().replace(hours=-12).naive
+    for cust in aconfig['CUSTOMERS']:
+        stats = get_stat(cust, tt)
         print('customer: {}'.format(cust))
         for k in stats.keys():
             print('  platform: {}'.format(k))
